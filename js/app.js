@@ -312,7 +312,9 @@ function viewLesson(id, partId) {
     const already = qs.every((q) => state.answers[q.id]);
     if (already) anim.skip();
 
-    const board = step.type === 'rule' ? ruleBoard(step.rule, anim) : bookBoard(step.ex, anim, part.rules);
+    // Numa parte de revisão (sem regras próprias), o resumo traz as regras do capítulo inteiro.
+    const memoRules = part.rules.length ? part.rules : mod.rules;
+    const board = step.type === 'rule' ? ruleBoard(step.rule, anim) : bookBoard(step.ex, anim, memoRules);
     const list = h('div.q-list', {},
       ...qs.map((q, n) => renderQuestion(q, {
         rule: ruleById[q.rule], number: n + 1, prev: state.answers[q.id],
@@ -460,13 +462,17 @@ function ruleBoard(rule, anim) {
 
       if (rule.table) {
         const genderTable = /maschil|femminil/i.test(rule.table.cols.join(' '));
+        // A seta "→" só faz sentido numa tabela singular → plural.
+        const numberTable = rule.table.cols.length === 2
+          && /singolare/i.test(rule.table.cols[0]) && /plurale/i.test(rule.table.cols[1]);
         const mark = rule.table.mark;
         const rows = rule.table.rows.map((row) => later(h('tr', {}, ...row.map((w, ci) => {
           const other = genderTable ? null : row[1 - ci];
           const html = mark === 'article' ? markArticle(w) : mark === 'none' ? w : markEnding(w, other);
           return h('td', {}, h('button.word-btn', { type: 'button', title: 'Ouvir', onclick: () => speak(w), html }));
         }))));
-        content.append(h(`table.chalk-table${genderTable ? '.gender' : '.number'}`, {},
+        const kind = genderTable ? '.gender' : numberTable ? '.number' : '.plain';
+        content.append(h(`table.chalk-table${kind}${rule.table.wide ? '.wide' : ''}`, {},
           h('thead', {}, h('tr', {}, ...rule.table.cols.map((c) => h('th', { class: /femmin/i.test(c) ? 'col-f' : /maschil/i.test(c) ? 'col-m' : '' }, c)))),
           h('tbody', {}, ...rows)));
         steps.push(async () => { for (const tr of rows) { reveal(tr); await anim.pause(260); } });

@@ -319,6 +319,11 @@ button { font: inherit; color: inherit; }
 .chalk-table th.col-m { color: var(--chalk-blue); }
 .chalk-table th.col-f { color: var(--chalk-pink); }
 .chalk-table td { padding: 2px 4px; }
+/* Tabela de conjugação: muitas colunas, fonte menor */
+.chalk-table.wide { font-size: 1.15rem; }
+.chalk-table.wide th { font-size: .68rem; letter-spacing: .08em; }
+.chalk-table.wide td:first-child .word-btn { color: var(--chalk-dim); font-family: var(--font); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+.chalk-table.wide .word-btn { padding: 1px 4px; }
 .chalk-table.gender td:first-child .word-btn { color: var(--chalk-blue); }
 .chalk-table.gender td:nth-child(2) .word-btn { color: var(--chalk-pink); }
 .chalk-table.number td:nth-child(2) .word-btn::before { content: '→ '; color: var(--chalk-dim); font-size: .8em; }
@@ -564,6 +569,7 @@ button { font: inherit; color: inherit; }
   .chalk-title { font-size: 1.9rem; }
   .chalk-text { font-size: 1.45rem; }
   .chalk-table, .chalk-examples { font-size: 1.35rem; }
+  .chalk-table.wide { font-size: .95rem; }
   .lesson-nav .btn { padding: .7em 1em; }
   .nav-hint { font-size: .75rem; }
   .score-chip small { display: none; }
