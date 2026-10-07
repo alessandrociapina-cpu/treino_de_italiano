@@ -28,8 +28,8 @@ export const store = {
   set name(v) { load().name = v; save(); },
 
   /** Registra um estudo concluído. kind: 'lesson' | 'practice'. */
-  addAttempt({ moduleId, kind, level, correct, total, mistakes }) {
-    const a = { id: Date.now(), date: new Date().toISOString(), moduleId, kind, level: level || null, correct, total, mistakes: mistakes || [] };
+  addAttempt({ moduleId, part, kind, level, correct, total, mistakes }) {
+    const a = { id: Date.now(), date: new Date().toISOString(), moduleId, part: part || null, kind, level: level || null, correct, total, mistakes: mistakes || [] };
     load().attempts.push(a);
     save();
     return a;
@@ -39,7 +39,9 @@ export const store = {
     return load().attempts.filter((a) =>
       (filter.moduleId == null || a.moduleId === filter.moduleId) &&
       (filter.kind == null || a.kind === filter.kind) &&
-      (filter.level == null || a.level === filter.level));
+      (filter.level == null || a.level === filter.level) &&
+      // `part` undefined = não filtra; null = estudos de capítulos sem partes.
+      (filter.part === undefined || (a.part ?? null) === filter.part));
   },
 
   best(filter) {

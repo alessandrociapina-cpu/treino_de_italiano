@@ -12,9 +12,13 @@ PWA de treino de gramática italiana para alunos brasileiros, baseado no livro
   - Painel lateral **"Tocca a te!"** com exercícios da regra e **correção instantânea**
     (o que você respondeu, a forma correta e o porquê).
   - Os **exercícios do livro** como verificação final, com o gabarito oficial.
-  - Módulo 1 — *Nomi: genere e numero* (18 regras) e Módulo 2 — *Articoli determinativi
-    e indeterminativi* (10 regras, com escolha de artigo em botões e plural com artigo).
+  - Módulo 1 — *Nomi: genere e numero* (18 regras, 185 exercícios) e Módulo 2 — *Articoli
+    determinativi e indeterminativi* (10 regras, 248 exercícios, com escolha de artigo em
+    botões e plural com artigo).
   - **Placar final** com nota, estrelas, desempenho por regra e revisão dos erros.
+- **Capítulos longos saem divididos em partes**, cada uma com seu placar e histórico.
+  O Capítulo 2 tem três: *Le forme* (80), *Genere, uso e plurale* (87) e
+  *Articoli indeterminativi* (81). O reforço continua valendo para o capítulo inteiro.
 - **Rinforzo**: exercícios novos (fora do livro) em 3 níveis — Facile, Medio, Difficile —
   sorteados a cada rodada.
 - **Histórico** salvo no aparelho (localStorage): cada estudo, data e % de acerto;
@@ -53,3 +57,6 @@ sw.js                   cache offline
 Crie `js/data/capitoloN.js` no mesmo formato de `capitolo1.js`, registre-o em
 `modules` dentro de `js/data/curriculum.js` e inclua o arquivo na lista `SHELL` de `sw.js`
 (aumentando `VERSION`).
+
+Se o capítulo for longo, exporte `parts: [{ id, num, title, pt, desc, rules, book }]` em vez de
+`rules`/`book` soltos, como em `capitolo2.js`. Quem não tem `parts` vira uma parte única.

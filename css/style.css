@@ -202,6 +202,25 @@ button { font: inherit; color: inherit; }
 .mc-score small { color: var(--ink-2); font-size: .72rem; }
 .mc-meta { display: flex; gap: 8px 18px; flex-wrap: wrap; color: var(--ink-2); font-size: .88rem; margin: 14px 0; }
 .mc-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+/* Partes do capítulo */
+.parts { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.part-row {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--surface-2); border: 1.5px solid var(--line); border-left: 5px solid var(--verde);
+  border-radius: 16px; padding: 12px 14px;
+}
+.pr-main { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
+.pr-num { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--rosso); }
+.pr-main b { font-family: var(--serif); font-size: 1.1rem; }
+.pr-main > small { color: var(--ink-2); font-size: .85rem; }
+.pr-meta { color: var(--ink-2); font-size: .8rem; margin-top: 4px; }
+.part-row.single { padding: 10px 14px; }
+.part-row.single .pr-meta { margin-top: 0; }
+.pr-side { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pr-best { font-weight: 800; font-size: .9rem; border: 2px solid var(--c); color: var(--c); border-radius: 999px; padding: 2px 10px; min-width: 56px; text-align: center; }
+.pr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.lt-part { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; background: var(--bg-2); color: var(--ink-2); border-radius: 999px; padding: 2px 8px; flex: none; }
+
 .practice { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line); }
 .practice h4 { margin: 0 0 10px; }
 .practice h4 small { color: var(--ink-2); font-weight: 600; }
@@ -532,6 +551,10 @@ button { font: inherit; color: inherit; }
   .features li { flex-direction: row; text-align: left; gap: 10px; }
   .features li small { margin-left: auto; text-align: right; max-width: 50%; }
   .levels { grid-template-columns: 1fr; }
+  .part-row { gap: 10px; }
+  .pr-side { width: 100%; justify-content: space-between; }
+  .pr-actions { flex: 1; justify-content: flex-end; }
+  .lt-part { display: none; }
   .mc-head { flex-wrap: wrap; }
   .mc-emoji { width: 56px; height: 56px; font-size: 2rem; }
   .mc-title h3 { font-size: 1.25rem; }

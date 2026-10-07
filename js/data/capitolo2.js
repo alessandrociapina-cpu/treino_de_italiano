@@ -455,6 +455,30 @@ const practice = {
   },
 };
 
+const allRules = rules.map((rl) => ({ ...rl, exercises: tag(rl.exercises, rl.id, rl.id) }));
+const allBook = bookExercises.map((ex) => ({ ...ex, questions: tag(ex.questions, ex.id) }));
+const pick = (list, ids) => ids.map((id) => list.find((x) => x.id === id));
+
+// O capítulo é longo (248 exercícios), então vem dividido em três partes,
+// cada uma com seu próprio placar e histórico.
+const parts = [
+  {
+    id: 'a', num: 1, title: 'Le forme dell’articolo determinativo', pt: 'As formas do artigo definido',
+    desc: 'Definido × indefinido, as 7 formas e a escolha entre il, lo, l’ e la.',
+    rules: pick(allRules, ['r1', 'r2', 'r3', 'r4']), book: pick(allBook, ['ex1', 'ex4']),
+  },
+  {
+    id: 'b', num: 2, title: 'Genere, uso e plurale', pt: 'O artigo que mostra o gênero, quando usá-lo e o plural',
+    desc: 'O artigo como marca de gênero, os casos de uso e o plural com artigo.',
+    rules: pick(allRules, ['r5', 'r6']), book: pick(allBook, ['ex2ab', 'ex2cd', 'ex3']),
+  },
+  {
+    id: 'c', num: 3, title: 'Articoli indeterminativi', pt: 'Os artigos indefinidos',
+    desc: 'un, uno, una e un’ — e o apóstrofo que muda o sentido da frase.',
+    rules: pick(allRules, ['r7', 'r8', 'r9', 'r10']), book: pick(allBook, ['ex5', 'ex6']),
+  },
+];
+
 export default {
   id: 2,
   title: 'Articoli',
@@ -463,8 +487,8 @@ export default {
   area: 'Abitazioni e ambienti della casa',
   emoji: '🏠',
   source: 'Grammatica in contesto — Capitolo 2, pp. 10–15',
-  rules: rules.map((rl) => ({ ...rl, exercises: tag(rl.exercises, rl.id, rl.id) })),
-  book: bookExercises.map((ex) => ({ ...ex, questions: tag(ex.questions, ex.id) })),
+  intro: 'O artigo italiano muda conforme o <b>gênero</b>, o <b>número</b> e — a novidade para nós — o <b>som</b> com que começa a palavra seguinte. São 7 formas no definido e 4 no indefinido, contra as 4 do português.',
+  parts,
   practice: Object.fromEntries(
     Object.entries(practice).map(([lvl, p]) => [lvl, { ...p, pool: tag(p.pool, `c2p${lvl}`) }]),
   ),
