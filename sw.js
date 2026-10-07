@@ -1,6 +1,6 @@
 // Service worker: funciona offline guardando o app em cache.
 // Ao alterar arquivos do app, aumente a versão para forçar a atualização.
-const VERSION = 'parliamo-v5';
+const VERSION = 'parliamo-v6';
 const SHELL = [
   './',
   './index.html',
@@ -15,6 +15,7 @@ const SHELL = [
   './js/data/capitolo1.js',
   './js/data/capitolo2.js',
   './js/data/capitolo3.js',
+  './js/data/capitolo4.js',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
