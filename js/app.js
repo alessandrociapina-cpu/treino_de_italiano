@@ -462,9 +462,11 @@ function ruleBoard(rule, anim) {
 
       if (rule.table) {
         const genderTable = /maschil|femminil/i.test(rule.table.cols.join(' '));
-        // A seta "→" só faz sentido numa tabela singular → plural.
-        const numberTable = rule.table.cols.length === 2
-          && /singolare/i.test(rule.table.cols[0]) && /plurale/i.test(rule.table.cols[1]);
+        // A seta "→" só faz sentido quando a 2ª coluna é a transformação da 1ª.
+        // Detecta as tabelas Singolare → Plurale; `arrow: false` desliga à mão.
+        const numberTable = rule.table.arrow ?? (rule.table.cols.length === 2
+          && /^singolare$/i.test(rule.table.cols[0].trim())
+          && /^plurale$/i.test(rule.table.cols[1].trim()));
         const mark = rule.table.mark;
         const rows = rule.table.rows.map((row) => later(h('tr', {}, ...row.map((w, ci) => {
           const other = genderTable ? null : row[1 - ci];

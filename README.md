@@ -6,22 +6,27 @@ PWA de treino de gramática italiana para alunos brasileiros, baseado no livro
 ## O que já existe
 
 - **Tela de introdução** animada (tricolor, voo Brasil → Itália, palavras flutuando).
-- **Sete módulos prontos** (Capítulos 1 a 7 do livro):
-  - 18 regras, cada uma escrita **letra a letra numa lousa** (italiano + tradução em português),
+- **Oito módulos prontos** (Capítulos 1 a 8 do livro):
+  - Cada regra escrita **letra a letra numa lousa** (italiano + tradução em português),
     com a tabela de exemplos aparecendo em seguida, pronúncia (🔊) e uma *dica para brasileiros*.
   - Painel lateral **"Tocca a te!"** com exercícios da regra e **correção instantânea**
     (o que você respondeu, a forma correta e o porquê).
   - Os **exercícios do livro** como verificação final, com o gabarito oficial.
-  - Módulo 1 — *Nomi: genere e numero* (18 regras, 185 exercícios), Módulo 2 — *Articoli
-    determinativi e indeterminativi* (10 regras, 248), Módulo 3 — *Aggettivi: concordanza*
-    (11 regras, 222), Módulo 4 — *Essere e avere: indicativo presente* (8 regras, 202),
-    Módulo 5 — *Indicativo presente: verbi regolari e irregolari* (20 regras, 451) e
-    Módulo 6 — *Aggettivi e pronomi possessivi* (6 regras, 127) e Módulo 7 —
-    *Interrogativi* (8 regras, 151).
   - **Placar final** com nota, estrelas, desempenho por regra e revisão dos erros.
-- **Capítulos longos saem divididos em partes**, cada uma com seu placar e histórico.
-  Os Capítulos 2, 3, 4 e 7 têm três partes cada, o 5 tem sete e o 6 tem duas — de 42 a 87
-  exercícios por parte. O reforço continua valendo para o capítulo inteiro.
+
+| Módulo | Capítulo | Regras | Exercícios | Partes |
+|---|---|---:|---:|---:|
+| 1 | *Nomi: genere e numero* | 18 | 185 | 1 |
+| 2 | *Articoli determinativi e indeterminativi* | 10 | 248 | 3 |
+| 3 | *Aggettivi: concordanza* | 11 | 222 | 3 |
+| 4 | *Essere e avere: indicativo presente* | 8 | 202 | 3 |
+| 5 | *Indicativo presente: verbi regolari e irregolari* | 20 | 451 | 7 |
+| 6 | *Aggettivi e pronomi possessivi* | 6 | 127 | 2 |
+| 7 | *Interrogativi* | 8 | 151 | 3 |
+| 8 | *Verbi riflessivi e pronominali* | 9 | 159 | 3 |
+
+- **Capítulos longos saem divididos em partes**, cada uma com seu placar e histórico
+  (de 42 a 87 exercícios por parte). O reforço continua valendo para o capítulo inteiro.
 - **Rinforzo**: exercícios novos (fora do livro) em 3 níveis — Facile, Medio, Difficile —
   sorteados a cada rodada.
 - **Histórico** salvo no aparelho (localStorage): cada estudo, data e % de acerto;
@@ -55,6 +60,7 @@ js/data/capitolo4.js    conteúdo do Capítulo 4
 js/data/capitolo5.js    conteúdo do Capítulo 5
 js/data/capitolo6.js    conteúdo do Capítulo 6
 js/data/capitolo7.js    conteúdo do Capítulo 7
+js/data/capitolo8.js    conteúdo do Capítulo 8
 js/data/helpers.js      construtores das questões (gênero, plural, artigo, adjetivo, verbo…)
 js/data/curriculum.js   roteiro dos capítulos
 sw.js                   cache offline

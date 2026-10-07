@@ -61,7 +61,7 @@ const rules = [
     it: 'Questi sono i pronomi usati come soggetto in italiano: io, tu, lui/lei al singolare; noi, voi, loro al plurale. I pronomi lui e lei si usano solo per le persone; per gli oggetti si usano questo o quello.',
     pt: 'Os pronomes sujeito são <b>io, tu, lui/lei</b> (singular) e <b>noi, voi, loro</b> (plural). <b>Lui</b> e <b>lei</b> servem só para pessoas: para coisas, usa-se <i>questo</i> ou <i>quello</i>.',
     short: 'io, tu, lui/lei, noi, voi, loro. Para coisas, questo/quello em vez de lui/lei.',
-    table: { mark: 'none', cols: ['Singolare', 'Plurale'], rows: [['io', 'noi'], ['tu', 'voi'], ['lui / lei', 'loro']] },
+    table: { mark: 'none', arrow: false, cols: ['Singolare', 'Plurale'], rows: [['io', 'noi'], ['tu', 'voi'], ['lui / lei', 'loro']] },
     tip: 'Diferente do português, o italiano não tem "ele/ela" para objetos: não se diz <i>lui è un atlante</i>, e sim <b>quello è un atlante</b>. E <b>loro</b> serve para eles e elas, sem distinção.',
     task: 'Qual é o pronome que combina com esse verbo?',
     exercises: [
