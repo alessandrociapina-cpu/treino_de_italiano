@@ -429,6 +429,8 @@ button { font: inherit; color: inherit; }
 }
 .q input:focus { outline: none; border-color: var(--verde); box-shadow: 0 0 0 4px rgba(0, 146, 70, .15); }
 .q input.mini { width: 4.2em; text-align: center; font-family: var(--serif); font-weight: 700; padding: .15em .3em; margin: 0 2px; font-size: 1.15rem; }
+.q input.mid { width: 7.5em; text-align: center; font-family: var(--serif); font-weight: 700; padding: .15em .4em; margin: 0 3px; font-size: 1.15rem; }
+.base { font-family: var(--serif); font-style: italic; color: var(--ink-2); font-size: .95rem; }
 .q.is-ok input { border-color: var(--ok); color: var(--ok); }
 .q.is-ko input { border-color: var(--ko); color: var(--ko); text-decoration: line-through; }
 .answer-row { display: flex; gap: 8px; margin-top: 8px; }
