@@ -38,21 +38,45 @@ export function animator() {
   return a;
 }
 
-/** Escreve o texto (HTML simples permitido) letra por letra, como giz na lousa. */
-export async function typewrite(node, html, anim, speed = 26) {
-  node.classList.add('typing');
-  if (anim.skipped) { node.innerHTML = html; node.classList.remove('typing'); return; }
-  // Separa tags de texto para não quebrar o HTML durante a digitação.
-  const tokens = html.match(/<[^>]+>|&[a-z]+;|[^<&]/gi) || [];
-  let out = '';
-  for (const t of tokens) {
-    if (anim.skipped) break;
-    out += t;
-    node.innerHTML = out;
-    if (t.length === 1) await wait(t === ' ' ? speed * 0.4 : /[.,:;]/.test(t) ? speed * 6 : speed);
-  }
+/**
+ * Prepara o texto (HTML simples permitido) para ser "escrito a giz": o conteúdo final já é
+ * colocado no lugar, com cada letra invisível — assim o espaço fica reservado e a lousa
+ * não cresce enquanto escreve. Retorna a função que faz a animação.
+ */
+export function chalkText(node, html) {
   node.innerHTML = html;
-  node.classList.remove('typing');
+  const chars = [];
+  const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+  const texts = [];
+  while (walker.nextNode()) texts.push(walker.currentNode);
+  for (const t of texts) {
+    const frag = document.createDocumentFragment();
+    for (const ch of t.data) {
+      const span = document.createElement('span');
+      span.className = 'ch';
+      span.textContent = ch;
+      frag.append(span);
+      chars.push(span);
+    }
+    t.replaceWith(frag);
+  }
+  return async function play(anim, speed = 26) {
+    let prev = null;
+    for (const c of chars) {
+      if (anim.skipped) break;
+      prev?.classList.remove('cur');
+      c.classList.add('on', 'cur');
+      prev = c;
+      const t = c.textContent;
+      await wait(t === ' ' ? speed * 0.4 : /[.,:;]/.test(t) ? speed * 6 : speed);
+    }
+    node.innerHTML = html; // limpa os spans por letra
+  };
+}
+
+/** Atalho: prepara e escreve imediatamente. */
+export async function typewrite(node, html, anim, speed) {
+  await chalkText(node, html)(anim, speed);
 }
 
 // ───── Voz (pronúncia em italiano) ─────

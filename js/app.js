@@ -1,4 +1,4 @@
-import { h, animator, typewrite, speak, speakBtn, confetti, markEnding, formatDate, wait } from './ui.js';
+import { h, animator, chalkText, speak, speakBtn, confetti, markEnding, formatDate, wait, reducedMotion } from './ui.js';
 import { renderQuestion, answerText } from './quiz.js';
 import { store, pct } from './storage.js';
 import { modules, curriculum } from './data/curriculum.js';
@@ -251,9 +251,16 @@ function viewLesson(id) {
     nav.replaceChildren();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    const prevBtn = i > 0 ? h('button.btn.btn-ghost', { type: 'button', onclick: () => show(i - 1) }, '← Anterior') : h('span');
+    // Ao trocar de passo, o apagador limpa a lousa antes de mostrar a próxima regra.
+    const goTo = async (target) => {
+      nav.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+      currentAnim?.skip();
+      await eraseBoard(body);
+      if (target === 'end') finishLesson(); else show(target);
+    };
+    const prevBtn = i > 0 ? h('button.btn.btn-ghost', { type: 'button', onclick: () => goTo(i - 1) }, '← Anterior') : h('span');
     const isLast = i === steps.length - 1;
-    const nextBtn = h('button.btn.btn-primary', { type: 'button', onclick: () => (isLast ? finishLesson() : show(i + 1)) },
+    const nextBtn = h('button.btn.btn-primary', { type: 'button', onclick: () => goTo(isLast ? 'end' : i + 1) },
       isLast ? 'Ver meu resultado 🏁' : 'Próximo →');
     const hint = h('span.nav-hint');
     nav.append(prevBtn, hint, nextBtn);
@@ -296,6 +303,7 @@ function viewLesson(id) {
       h('div.panel-lock', {}, h('p', {}, '📝 Leia a lousa primeiro…'), h('button.btn.btn-ghost.sm', { type: 'button', onclick: () => anim.skip() }, 'Pular animação ⏩')));
 
     body.append(h('div.lesson-grid', {}, board.node, panel));
+    fitBoard();
 
     board.done.then(() => {
       if (anim.cancelled) return;
@@ -307,6 +315,25 @@ function viewLesson(id) {
       if (!already) setTimeout(() => focusNext(list, true), 400);
     });
   }
+
+  // Mantém todas as lousas do módulo com a altura da maior (recalcula ao mudar a largura).
+  let measuredWidth = 0;
+  function fitBoard(force) {
+    const board = body.querySelector('.lesson-grid > .board');
+    if (!board) return;
+    const w = Math.round(board.getBoundingClientRect().width);
+    if (w && (w !== measuredWidth || force)) {
+      measuredWidth = w;
+      body.style.setProperty('--board-h', `${measureBoards(mod, w)}px`);
+    }
+    // Lousa mais alta que a tela não pode ficar "grudada" no topo: rola junto com a página.
+    body.classList.toggle('tall-board', board.offsetHeight > innerHeight - 170);
+  }
+  let resizeTimer;
+  const onResize = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => fitBoard(), 150); };
+  window.addEventListener('resize', onResize);
+  window.addEventListener('hashchange', () => window.removeEventListener('resize', onResize), { once: true });
+  document.fonts?.ready.then(() => fitBoard(true));
 
   function finishLesson() {
     const all = steps.flatMap((s) => s.questions || []);
@@ -355,61 +382,83 @@ function coverStep(mod, start) {
       h('button.btn.btn-primary.btn-lg', { type: 'button', onclick: start }, 'Cominciamo! →')));
 }
 
-/** Lousa animada de uma regra. Retorna { node, done }. */
-function ruleBoard(rule, anim) {
-  const intro = rule.intro ? h('p.chalk-intro') : null;
-  const itText = h('p.chalk-text');
-  const ptText = h('p.chalk-pt.hidden');
-  const extra = h('div.chalk-extra');
-  const tip = h('div.tip.hidden', {}, h('span.tip-flag', {}, '🇧🇷'), h('div', {}, h('b', {}, 'Dica para brasileiros'), h('p', { html: rule.tip })));
+/**
+ * Lousa animada. Todo o conteúdo final é montado de uma vez (invisível) para que a lousa
+ * já nasça com o tamanho certo; a animação só revela o que já está no lugar.
+ * Retorna { node, done }.
+ */
+function chalkboard({ label, title, anim, build }) {
+  const content = h('div.board-content');
   const skipBtn = h('button.skip', { type: 'button', onclick: () => anim.skip() }, 'Pular ⏩');
-
   const node = h('section.board', {},
-    h('div.board-head', {}, h('span.board-label', {}, `Regola ${rule.num} · ${rule.section}`), skipBtn),
-    h('h2.chalk-title', { html: highlightEndings(rule.title) }),
-    intro, h('div.chalk-line', {}, itText, speakBtn(rule.it, 'Ouvir a regra')),
-    ptText, extra, tip,
+    content,
     h('div.chalk-tray', { 'aria-hidden': 'true' }, h('span.chalk.c1'), h('span.chalk.c2'), h('span.eraser')));
-
+  content.append(h('div.board-head', {}, h('span.board-label', {}, label), skipBtn), h('h2.chalk-title', { html: title }));
+  const steps = build(content);
   const done = (async () => {
     await anim.pause(350);
-    if (intro) { await typewrite(intro, rule.intro, anim); await anim.pause(300); }
-    await typewrite(itText, highlightEndings(rule.it), anim);
-    await anim.pause(300);
-    ptText.classList.remove('hidden');
-    ptText.innerHTML = rule.pt;
-    await anim.pause(700);
-
-    if (rule.table) {
-      const genderTable = /maschil|femminil/i.test(rule.table.cols.join(' '));
-      const tbody = h('tbody');
-      const table = h(`table.chalk-table${genderTable ? '.gender' : '.number'}`, {},
-        h('thead', {}, h('tr', {}, ...rule.table.cols.map((c) => h('th', { class: /femmin/i.test(c) ? 'col-f' : /maschil/i.test(c) ? 'col-m' : '' }, c)))), tbody);
-      extra.append(table);
-      for (const row of rule.table.rows) {
-        const tr = h('tr.appear', {}, ...row.map((w, ci) => {
-          const other = genderTable ? null : row[1 - ci];
-          return h('td', {}, h('button.word-btn', { type: 'button', title: 'Ouvir', onclick: () => speak(w), html: markEnding(w, other) }));
-        }));
-        tbody.append(tr);
-        await anim.pause(260);
-      }
-    }
-    if (rule.examples) {
-      const ul = h('ul.chalk-examples');
-      extra.append(ul);
-      for (const ex of rule.examples) {
-        const li = h('li', {}, h('span'), speakBtn(ex));
-        ul.append(li);
-        await typewrite(li.firstChild, ex, anim, 20);
-        await anim.pause(150);
-      }
-    }
-    await anim.pause(300);
-    tip.classList.remove('hidden');
-    skipBtn.remove();
+    for (const run of steps) await run();
+    skipBtn.classList.add('invisible');
   })();
   return { node, done };
+}
+
+/** Elemento que aparece depois (já ocupa seu espaço, só fica invisível). */
+const later = (node) => { node.classList.add('pending'); return node; };
+const reveal = (node) => { node.classList.remove('pending'); node.classList.add('appear'); };
+
+function ruleBoard(rule, anim) {
+  return chalkboard({
+    label: `Regola ${rule.num} · ${rule.section}`, title: highlightEndings(rule.title), anim,
+    build(content) {
+      const steps = [];
+      if (rule.intro) {
+        const intro = h('p.chalk-intro');
+        content.append(intro);
+        const play = chalkText(intro, rule.intro);
+        steps.push(async () => { await play(anim); await anim.pause(300); });
+      }
+      const itText = h('p.chalk-text');
+      content.append(h('div.chalk-line', {}, itText, speakBtn(rule.it, 'Ouvir a regra')));
+      const playIt = chalkText(itText, highlightEndings(rule.it));
+      steps.push(async () => { await playIt(anim); await anim.pause(300); });
+
+      const ptText = later(h('p.chalk-pt', { html: rule.pt }));
+      content.append(ptText);
+      steps.push(async () => { reveal(ptText); await anim.pause(700); });
+
+      if (rule.table) {
+        const genderTable = /maschil|femminil/i.test(rule.table.cols.join(' '));
+        const rows = rule.table.rows.map((row) => later(h('tr', {}, ...row.map((w, ci) => {
+          const other = genderTable ? null : row[1 - ci];
+          return h('td', {}, h('button.word-btn', { type: 'button', title: 'Ouvir', onclick: () => speak(w), html: markEnding(w, other) }));
+        }))));
+        content.append(h(`table.chalk-table${genderTable ? '.gender' : '.number'}`, {},
+          h('thead', {}, h('tr', {}, ...rule.table.cols.map((c) => h('th', { class: /femmin/i.test(c) ? 'col-f' : /maschil/i.test(c) ? 'col-m' : '' }, c)))),
+          h('tbody', {}, ...rows)));
+        steps.push(async () => { for (const tr of rows) { reveal(tr); await anim.pause(260); } });
+      }
+      if (rule.examples) {
+        const items = rule.examples.map((ex) => {
+          const span = h('span');
+          const li = later(h('li', {}, span, speakBtn(ex)));
+          return { li, play: chalkText(span, ex) };
+        });
+        content.append(h('ul.chalk-examples', {}, ...items.map((x) => x.li)));
+        steps.push(async () => {
+          for (const { li, play } of items) {
+            li.classList.remove('pending');
+            await play(anim, 20);
+            await anim.pause(150);
+          }
+        });
+      }
+      const tip = later(h('div.tip', {}, h('span.tip-flag', {}, '🇧🇷'), h('div', {}, h('b', {}, 'Dica para brasileiros'), h('p', { html: rule.tip }))));
+      content.append(tip);
+      steps.push(async () => { await anim.pause(300); reveal(tip); });
+      return steps;
+    },
+  });
 }
 
 /** Destaca as terminações (-o, -a, -zione…) no texto da regra. */
@@ -418,26 +467,53 @@ function highlightEndings(text) {
 }
 
 function bookBoard(ex, anim) {
-  const itText = h('p.chalk-text');
-  const ptText = h('p.chalk-pt.hidden');
-  const tip = h('div.tip.hidden', {}, h('span.tip-flag', {}, '📘'),
-    h('div', {}, h('b', {}, 'Exercício do livro'), h('p', {}, 'Agora é hora de juntar todas as regras! Se errar, a correção mostra qual regra revisar.')));
-  const node = h('section.board.board-book', {},
-    h('div.board-head', {}, h('span.board-label', {}, 'Esercizi · Verifica'), h('button.skip', { type: 'button', onclick: () => anim.skip() }, 'Pular ⏩')),
-    h('h2.chalk-title', {}, ex.title),
-    h('div.chalk-line', {}, itText, speakBtn(ex.it)),
-    ptText, tip,
-    h('div.chalk-tray', { 'aria-hidden': 'true' }, h('span.chalk.c1'), h('span.chalk.c2'), h('span.eraser')));
-  const done = (async () => {
-    await anim.pause(300);
-    await typewrite(itText, ex.it, anim);
-    ptText.classList.remove('hidden');
-    ptText.textContent = ex.pt;
-    await anim.pause(500);
-    tip.classList.remove('hidden');
-    node.querySelector('.skip')?.remove();
-  })();
-  return { node, done };
+  return chalkboard({
+    label: 'Esercizi · Verifica', title: ex.title, anim,
+    build(content) {
+      const itText = h('p.chalk-text');
+      const ptText = later(h('p.chalk-pt', {}, ex.pt));
+      const tip = later(h('div.tip', {}, h('span.tip-flag', {}, '📘'),
+        h('div', {}, h('b', {}, 'Exercício do livro'), h('p', {}, 'Agora é hora de juntar todas as regras! Se errar, a correção mostra qual regra revisar.'))));
+      content.append(h('div.chalk-line', {}, itText, speakBtn(ex.it)), ptText, tip);
+      const play = chalkText(itText, ex.it);
+      return [
+        async () => { await play(anim); reveal(ptText); await anim.pause(500); },
+        async () => reveal(tip),
+      ];
+    },
+  });
+}
+
+/**
+ * Altura fixa da lousa: mede a lousa de todas as regras e exercícios do módulo
+ * (já com o conteúdo completo) na largura atual e usa a maior.
+ */
+function measureBoards(mod, width) {
+  const probe = h('div.board-measure', { style: { width: `${width}px` } });
+  document.body.append(probe);
+  const quiet = animator();
+  quiet.cancel();
+  const boards = [...mod.rules.map((r) => ruleBoard(r, quiet)), ...mod.book.map((b) => bookBoard(b, quiet))];
+  boards.forEach((b) => probe.append(b.node));
+  const max = Math.max(...boards.map((b) => b.node.offsetHeight));
+  probe.remove();
+  return max;
+}
+
+/** Animação do apagador limpando a lousa antes de trocar de regra. */
+async function eraseBoard(body) {
+  const board = body.querySelector('.lesson-grid > .board');
+  if (!board || reducedMotion()) return;
+  const rect = board.getBoundingClientRect();
+  if (rect.bottom < 80 || rect.top > innerHeight - 80) {
+    board.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    await wait(450);
+  }
+  window.speechSynthesis?.cancel();
+  board.append(h('div.board-smudge', { 'aria-hidden': 'true' }), h('div.eraser-tool', { 'aria-hidden': 'true' }));
+  board.classList.add('erasing');
+  body.querySelector('.panel')?.classList.add('leaving');
+  await wait(1150);
 }
 
 // ───────────────────────────── Reforço ─────────────────────────────
