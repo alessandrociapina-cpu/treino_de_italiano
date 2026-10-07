@@ -417,6 +417,7 @@ export default {
   area: 'Cibi e bevande',
   emoji: '🍝',
   source: 'Grammatica in contesto — Capitolo 1, pp. 1–5',
+  intro: 'Em italiano os substantivos (<i>nomi</i>) têm <b>gênero</b> — maschile ou femminile — e <b>número</b> — singolare ou plurale. Vamos ver cada regra na lousa e praticar logo em seguida.',
   rules: rules.map((rl) => ({ ...rl, exercises: tag(rl.exercises, rl.id, rl.id) })),
   book: bookExercises.map((ex) => ({ ...ex, questions: tag(ex.questions, ex.id) })),
   practice: Object.fromEntries(

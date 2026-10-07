@@ -3,7 +3,17 @@
 import capitolo1 from './capitolo1.js';
 import capitolo2 from './capitolo2.js';
 
-export const modules = { 1: capitolo1, 2: capitolo2 };
+/**
+ * Um capítulo pode ser dividido em partes (cada uma com seu placar e histórico).
+ * Quem não tem `parts` vira uma parte única, para o app ter um só caminho.
+ * `rules` e `book` continuam reunindo tudo do capítulo.
+ */
+function normalize(mod) {
+  const parts = mod.parts || [{ id: 'u', num: 1, title: mod.subtitle, pt: mod.pt, rules: mod.rules, book: mod.book }];
+  return { ...mod, parts, rules: parts.flatMap((p) => p.rules), book: parts.flatMap((p) => p.book) };
+}
+
+export const modules = { 1: normalize(capitolo1), 2: normalize(capitolo2) };
 
 export const curriculum = [
   { id: 1, title: 'Nomi', subtitle: 'Genere e numero', area: 'Cibi e bevande', emoji: '🍝' },

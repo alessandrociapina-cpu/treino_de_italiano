@@ -11,7 +11,7 @@ let installEvent = null;
 const routes = [
   [/^#?\/?$/, () => viewIntro()],
   [/^#\/home$/, () => viewHome()],
-  [/^#\/modulo\/(\d+)$/, (id) => viewLesson(+id)],
+  [/^#\/modulo\/(\d+)(?:\/([a-z]))?$/, (id, part) => viewLesson(+id, part)],
   [/^#\/reforco\/(\d+)\/(\d)$/, (id, lvl) => viewPractice(+id, +lvl)],
   [/^#\/resultado\/(\d+)$/, (id) => viewResult(+id)],
   [/^#\/historico$/, () => viewHistory()],
@@ -158,16 +158,14 @@ function ring(value, size = 64, stroke = 7) {
 
 const scoreColor = (p) => (p >= 80 ? 'var(--ok)' : p >= 50 ? 'var(--warn)' : 'var(--ko)');
 
-function moduleCard(mod) {
-  const session = store.session(`lesson-${mod.id}`);
-  const best = store.best({ moduleId: mod.id, kind: 'lesson' });
-  const last = store.last({ moduleId: mod.id, kind: 'lesson' });
-  const steps = lessonSteps(mod);
-  const resumeStep = session && session.step > 0 ? steps[session.step] : null;
+/** Chave da sessão em andamento. Capítulos sem partes mantêm a chave antiga. */
+const sessionKey = (mod, part) => (mod.parts.length > 1 ? `lesson-${mod.id}-${part.id}` : `lesson-${mod.id}`);
+/** Identificador da parte guardado no histórico (null quando o capítulo é inteiro). */
+const partKey = (mod, part) => (mod.parts.length > 1 ? part.id : null);
 
-  const mainBtn = resumeStep
-    ? h('a.btn.btn-primary', { href: `#/modulo/${mod.id}` }, `▶ Continuar (${stepLabel(resumeStep)})`)
-    : h('a.btn.btn-primary', { href: `#/modulo/${mod.id}` }, last ? '↻ Refazer o módulo' : '▶ Começar o módulo');
+function moduleCard(mod) {
+  const best = store.best({ moduleId: mod.id, kind: 'lesson' });
+  const multi = mod.parts.length > 1;
 
   return h('article.module-card', {},
     h('div.mc-head', {},
@@ -179,13 +177,11 @@ function moduleCard(mod) {
       h('div.mc-score', {}, ring(best), h('small', {}, 'melhor nota'))),
     h('div.mc-meta', {},
       h('span', {}, `📖 ${mod.rules.length} regras`),
-      h('span', {}, `✍️ ${countLessonQuestions(mod)} exercícios`),
-      last ? h('span', {}, `🕑 último: ${pct(last)}% em ${formatDate(last.date)}`) : h('span', {}, '✨ ainda não estudado')),
-    h('div.mc-actions', {},
-      mainBtn,
-      resumeStep ? h('button.btn.btn-ghost', { type: 'button', onclick: () => { store.clearSession(`lesson-${mod.id}`); go(`#/modulo/${mod.id}`); } }, '↻ Recomeçar') : null),
+      h('span', {}, `✍️ ${mod.parts.reduce((n, p) => n + countLessonQuestions(p), 0)} exercícios`),
+      multi ? h('span', {}, `🧩 ${mod.parts.length} partes`) : null),
+    h('div.parts', {}, ...mod.parts.map((part) => partRow(mod, part, multi))),
     h('div.practice', {},
-      h('h4', {}, '💪 Rinforzo ', h('small', {}, 'exercícios novos para reforçar')),
+      h('h4', {}, '💪 Rinforzo ', h('small', {}, 'exercícios novos de todo o capítulo')),
       h('div.levels', {},
         ...Object.entries(mod.practice).map(([lvl, p]) => {
           const b = store.best({ moduleId: mod.id, kind: 'practice', level: +lvl });
@@ -195,25 +191,56 @@ function moduleCard(mod) {
         }))));
 }
 
+function partRow(mod, part, multi) {
+  const href = multi ? `#/modulo/${mod.id}/${part.id}` : `#/modulo/${mod.id}`;
+  const key = sessionKey(mod, part);
+  const session = store.session(key);
+  const steps = lessonSteps(part);
+  const resumeStep = session && session.step > 0 ? steps[session.step] : null;
+  const filter = { moduleId: mod.id, kind: 'lesson', part: partKey(mod, part) };
+  const best = store.best(filter);
+  const last = store.last(filter);
+
+  // Num capítulo de parte única, a linha não repete o título que já está no cabeçalho.
+  return h(`div.part-row${multi ? '' : '.single'}`, {},
+    h('div.pr-main', {},
+      multi ? h('span.pr-num', {}, `Parte ${part.num}`) : null,
+      multi ? h('b', {}, part.title) : null,
+      multi ? h('small', {}, part.desc || part.pt) : null,
+      h('span.pr-meta', {},
+        `✍️ ${countLessonQuestions(part)} exercícios`,
+        last ? ` · 🕑 último: ${pct(last)}% em ${formatDate(last.date)}` : ' · ✨ ainda não estudado')),
+    h('div.pr-side', {},
+      h('span.pr-best', { style: { '--c': best == null ? 'var(--line)' : scoreColor(best) } }, best == null ? 'novo' : `${best}%`),
+      h('div.pr-actions', {},
+        resumeStep
+          ? h('a.btn.btn-primary.sm', { href }, `▶ Continuar (${stepLabel(resumeStep)})`)
+          : h('a.btn.btn-primary.sm', { href }, last ? '↻ Refazer' : '▶ Começar'),
+        resumeStep ? h('button.btn.btn-ghost.sm', { type: 'button', onclick: () => { store.clearSession(key); go(href); } }, '↻ Recomeçar') : null)));
+}
+
 // ───────────────────────────── Lição ─────────────────────────────
-function lessonSteps(mod) {
+function lessonSteps(part) {
   return [
     { type: 'cover' },
-    ...mod.rules.map((rule) => ({ type: 'rule', rule, questions: rule.exercises })),
-    ...mod.book.map((ex) => ({ type: 'book', ex, questions: ex.questions })),
+    ...part.rules.map((rule) => ({ type: 'rule', rule, questions: rule.exercises })),
+    ...part.book.map((ex) => ({ type: 'book', ex, questions: ex.questions })),
   ];
 }
 const stepLabel = (s) => (s.type === 'rule' ? `Regra ${s.rule.num}` : s.type === 'book' ? s.ex.title : 'Início');
-const countLessonQuestions = (mod) => lessonSteps(mod).reduce((n, s) => n + (s.questions?.length || 0), 0);
+const countLessonQuestions = (part) => lessonSteps(part).reduce((n, s) => n + (s.questions?.length || 0), 0);
 
-function viewLesson(id) {
+function viewLesson(id, partId) {
   const mod = modules[id];
-  if (!mod) return go('#/home');
+  const part = mod && (partId ? mod.parts.find((p) => p.id === partId) : mod.parts[0]);
+  if (!part) return go('#/home');
+  if (mod.parts.length > 1 && !partId) return go(`#/modulo/${id}/${mod.parts[0].id}`);
   app.className = 'lesson-page';
-  const key = `lesson-${id}`;
-  const steps = lessonSteps(mod);
-  const total = countLessonQuestions(mod);
+  const key = sessionKey(mod, part);
+  const steps = lessonSteps(part);
+  const total = countLessonQuestions(part);
   const state = store.session(key) || { step: 0, answers: {}, startedAt: Date.now() };
+  // Todas as regras do capítulo: uma questão desta parte pode citar regra de outra.
   const ruleById = Object.fromEntries(mod.rules.map((r) => [r.id, r]));
 
   const persist = () => store.setSession(key, state);
@@ -235,7 +262,10 @@ function viewLesson(id) {
     h('header.lesson-top', {},
       h('a.icon-btn', { href: '#/home', title: 'Voltar ao início', 'aria-label': 'Voltar ao início' }, '✕'),
       h('div.lt-center', {},
-        h('div.lt-title', {}, h('b', {}, `Cap. ${mod.id} · ${mod.title}`), stepTitle),
+        h('div.lt-title', {},
+          h('b', {}, `Cap. ${mod.id} · ${mod.title}`),
+          mod.parts.length > 1 ? h('span.lt-part', {}, `Parte ${part.num}`) : null,
+          stepTitle),
         h('div.progress', { role: 'progressbar' }, progressFill)),
       scoreChip),
     body, nav);
@@ -266,7 +296,7 @@ function viewLesson(id) {
     nav.append(prevBtn, hint, nextBtn);
 
     if (step.type === 'cover') {
-      body.append(coverStep(mod, () => show(1)));
+      body.append(coverStep(mod, part, () => show(1)));
       return;
     }
 
@@ -282,7 +312,7 @@ function viewLesson(id) {
     const already = qs.every((q) => state.answers[q.id]);
     if (already) anim.skip();
 
-    const board = step.type === 'rule' ? ruleBoard(step.rule, anim) : bookBoard(step.ex, anim, mod.rules);
+    const board = step.type === 'rule' ? ruleBoard(step.rule, anim) : bookBoard(step.ex, anim, part.rules);
     const list = h('div.q-list', {},
       ...qs.map((q, n) => renderQuestion(q, {
         rule: ruleById[q.rule], number: n + 1, prev: state.answers[q.id],
@@ -324,7 +354,7 @@ function viewLesson(id) {
     const w = Math.round(board.getBoundingClientRect().width);
     if (w && (w !== measuredWidth || force)) {
       measuredWidth = w;
-      body.style.setProperty('--board-h', `${measureBoards(mod, w)}px`);
+      body.style.setProperty('--board-h', `${measureBoards(part, w)}px`);
     }
     // Lousa mais alta que a tela não pode ficar "grudada" no topo: rola junto com a página.
     body.classList.toggle('tall-board', board.offsetHeight > innerHeight - 170);
@@ -339,7 +369,7 @@ function viewLesson(id) {
     const all = steps.flatMap((s) => s.questions || []);
     const mistakes = all.filter((q) => state.answers[q.id] && !state.answers[q.id].ok)
       .map((q) => ({ qid: q.id, given: state.answers[q.id].given }));
-    const attempt = store.addAttempt({ moduleId: id, kind: 'lesson', correct: correctCount(), total: all.length, mistakes });
+    const attempt = store.addAttempt({ moduleId: id, part: partKey(mod, part), kind: 'lesson', correct: correctCount(), total: all.length, mistakes });
     store.clearSession(key);
     go(`#/resultado/${attempt.id}`);
   }
@@ -361,9 +391,10 @@ function pulse(node) {
   node.classList.add('pulse');
 }
 
-function coverStep(mod, start) {
+function coverStep(mod, part, start) {
+  const multi = mod.parts.length > 1;
   const sections = [];
-  for (const r of mod.rules) {
+  for (const r of part.rules) {
     let s = sections.find((x) => x.name === r.section);
     if (!s) sections.push((s = { name: r.section, rules: [] }));
     s.rules.push(r);
@@ -371,13 +402,13 @@ function coverStep(mod, start) {
   return h('div.cover', {},
     h('div.cover-card', {},
       h('div.cover-emoji', {}, mod.emoji),
-      h('span.mc-num', {}, `Capitolo ${mod.id}`),
-      h('h1', {}, mod.title, h('br'), h('span', {}, mod.subtitle)),
-      h('p.cover-pt', {}, mod.pt),
-      h('p', { html: 'Em italiano os substantivos (<i>nomi</i>) têm <b>gênero</b> — maschile ou femminile — e <b>número</b> — singolare ou plurale. Vamos ver cada regra na lousa e praticar logo em seguida.' }),
+      h('span.mc-num', {}, multi ? `Capitolo ${mod.id} · Parte ${part.num} di ${mod.parts.length}` : `Capitolo ${mod.id}`),
+      h('h1', {}, mod.title, h('br'), h('span', {}, multi ? part.title : mod.subtitle)),
+      h('p.cover-pt', {}, part.pt || mod.pt),
+      h('p', { html: mod.intro || 'Veja cada regra na lousa e pratique logo em seguida.' }),
       h('div.cover-sections', {},
         ...sections.map((s) => h('div.cs', {}, h('b', {}, s.name), h('ol', { start: s.rules[0].num }, ...s.rules.map((r) => h('li', {}, r.title))))),
-        h('div.cs', {}, h('b', {}, 'Esercizi del libro'), h('ol', {}, ...mod.book.map((b) => h('li', {}, `${b.title} — ${b.pt}`))))),
+        part.book.length ? h('div.cs', {}, h('b', {}, 'Esercizi del libro'), h('ol', {}, ...part.book.map((b) => h('li', {}, `${b.title} — ${b.pt}`)))) : null),
       h('p.cover-source', {}, `📘 ${mod.source}`),
       h('button.btn.btn-primary.btn-lg', { type: 'button', onclick: start }, 'Cominciamo! →')));
 }
@@ -501,16 +532,16 @@ function bookBoard(ex, anim, rules = []) {
 }
 
 /**
- * Altura fixa da lousa: mede a lousa de todas as regras e exercícios do módulo
+ * Altura fixa da lousa: mede a lousa de todas as regras e exercícios da parte
  * (já com o conteúdo completo) na largura atual e usa a maior.
  */
-function measureBoards(mod, width) {
+function measureBoards(part, width) {
   const probe = h('div.board-measure', { style: { width: `${width}px` } });
   document.body.append(probe);
   const quiet = animator();
   quiet.cancel();
   // O resumo das regras não entra na medida: ele se ajusta ao espaço que sobrar.
-  const boards = [...mod.rules.map((r) => ruleBoard(r, quiet)), ...mod.book.map((b) => bookBoard(b, quiet))];
+  const boards = [...part.rules.map((r) => ruleBoard(r, quiet)), ...part.book.map((b) => bookBoard(b, quiet))];
   boards.forEach((b) => probe.append(b.node));
   const max = Math.max(...boards.map((b) => b.node.offsetHeight));
   probe.remove();
@@ -630,7 +661,8 @@ function viewResult(attemptId) {
   app.className = 'result-page';
   const p = pct(attempt);
   const index = questionIndex(mod);
-  const filter = { moduleId: mod.id, kind: attempt.kind, level: attempt.level ?? undefined };
+  const part = attempt.part ? mod.parts.find((x) => x.id === attempt.part) : mod.parts[0];
+  const filter = { moduleId: mod.id, kind: attempt.kind, level: attempt.level ?? undefined, part: attempt.kind === 'lesson' ? (attempt.part || null) : undefined };
   const previous = store.attempts(filter).filter((a) => a.id < attempt.id);
   const prevBest = previous.length ? Math.max(...previous.map(pct)) : null;
   const isLatest = store.last(filter)?.id === attempt.id;
@@ -641,8 +673,10 @@ function viewResult(attemptId) {
         : p >= 50 ? ['Bene, ma si può migliorare 💪', 'Bom começo! Veja as explicações e tente de novo.']
           : ['Coraggio! 🍀', 'Não desanime: revise as regras e refaça — você vai melhorar.'];
   const stars = p >= 90 ? 3 : p >= 70 ? 2 : p >= 50 ? 1 : 0;
-  const what = attempt.kind === 'lesson' ? 'Módulo completo' : `Reforço · ${mod.practice[attempt.level].name}`;
-  const again = attempt.kind === 'lesson' ? `#/modulo/${mod.id}` : `#/reforco/${mod.id}/${attempt.level}`;
+  const what = attempt.kind !== 'lesson' ? `Reforço · ${mod.practice[attempt.level].name}`
+    : attempt.part ? `Parte ${part?.num ?? ''} · ${part?.title ?? ''}` : 'Módulo completo';
+  const again = attempt.kind !== 'lesson' ? `#/reforco/${mod.id}/${attempt.level}`
+    : attempt.part ? `#/modulo/${mod.id}/${attempt.part}` : `#/modulo/${mod.id}`;
 
   // Desempenho por regra (só na lição completa)
   let breakdown = null;
@@ -654,7 +688,7 @@ function viewResult(attemptId) {
     });
     breakdown = h('section.card', {},
       h('h3', {}, 'Desempenho por regra'),
-      h('div.rule-chips', {}, ...mod.rules.map((r) => {
+      h('div.rule-chips', {}, ...(part?.rules || mod.rules).map((r) => {
         const n = wrongRules.get(r.id) || 0;
         return h(`span.rule-chip${n === 0 ? '.good' : n === 1 ? '.mid' : '.bad'}`, { title: r.title },
           h('b', {}, r.num), ` ${r.title}`, n ? h('small', {}, ` · ${n} erro${n > 1 ? 's' : ''}`) : ' ✓');
@@ -680,7 +714,7 @@ function viewResult(attemptId) {
           : p > prevBest ? h('p.badge-note.up', {}, `🚀 Novo recorde! Antes: ${prevBest}%`)
             : h('p.badge-note', {}, `Seu recorde: ${prevBest}%`),
         h('div.result-actions', {},
-          h('a.btn.btn-primary', { href: again, onclick: () => attempt.kind === 'lesson' && store.clearSession(`lesson-${mod.id}`) }, '↻ Refazer para melhorar'),
+          h('a.btn.btn-primary', { href: again, onclick: () => attempt.kind === 'lesson' && part && store.clearSession(sessionKey(mod, part)) }, '↻ Refazer para melhorar'),
           h('a.btn.btn-ghost', { href: '#/home' }, '🏠 Início'))),
       breakdown,
       h('section.card', {},
@@ -728,7 +762,9 @@ function viewHistory() {
         ? h('ul.history', {}, ...list.map((a) => {
           const mod = modules[a.moduleId];
           const p = pct(a);
-          const what = a.kind === 'lesson' ? 'Módulo completo' : `Reforço ${mod?.practice[a.level]?.emoji || ''} ${mod?.practice[a.level]?.name || ''}`;
+          const ap = a.part ? mod?.parts.find((x) => x.id === a.part) : null;
+          const what = a.kind !== 'lesson' ? `Reforço ${mod?.practice[a.level]?.emoji || ''} ${mod?.practice[a.level]?.name || ''}`
+            : ap ? `Parte ${ap.num} · ${ap.title}` : 'Módulo completo';
           return h('li', {},
             h('a', { href: `#/resultado/${a.id}` },
               h('span.h-emoji', {}, mod?.emoji || '📘'),
