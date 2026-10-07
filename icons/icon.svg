@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="g" cx=".3" cy=".2" r=".9"><stop offset="0" stop-color="#3a6b4d"/><stop offset="1" stop-color="#1b3325"/></radialGradient>
+    <clipPath id="flag"><rect x="96" y="104" width="320" height="44" rx="12"/></clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <g clip-path="url(#flag)">
+    <rect x="96" y="104" width="107" height="44" fill="#009246"/>
+    <rect x="203" y="104" width="106" height="44" fill="#ffffff"/>
+    <rect x="309" y="104" width="107" height="44" fill="#ce2b37"/>
+  </g>
+  <text x="256" y="356" text-anchor="middle" font-family="Georgia, 'DejaVu Serif', serif" font-weight="700" font-size="220" fill="#f3f1e7">Pa</text>
+  <path d="M150 404 q 106 34 212 0" stroke="#ffe58a" stroke-width="14" fill="none" stroke-linecap="round"/>
+</svg>

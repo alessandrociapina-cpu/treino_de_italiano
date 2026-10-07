@@ -1,0 +1,135 @@
+// Renderização das questões e correção instantânea.
+import { h, speakBtn, speak } from './ui.js';
+
+const GENDER = { m: 'maschile', f: 'femminile' };
+const GENDER_PT = { m: 'masculino', f: 'feminino' };
+
+const norm = (s) => String(s ?? '').toLowerCase().replace(/[’`´]/g, "'").replace(/\s+/g, ' ').trim();
+const plain = (s) => norm(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+export const accepted = (q) => (Array.isArray(q.a) ? q.a : [q.a]);
+
+/** Resposta canônica em texto legível. */
+export function answerText(q) {
+  const a = accepted(q)[0];
+  if (q.kind === 'gender') return GENDER[a];
+  if (q.kind === 'ending') return q.stem + a;
+  if (q.kind === 'fill') return lastWord(q.before) + a;
+  return a;
+}
+
+const lastWord = (s) => (s.match(/(\S+)$/) || ['', ''])[1];
+
+/** Corrige uma resposta. Retorna { ok, accentOnly }. */
+export function check(q, given) {
+  const g = norm(given);
+  let options = accepted(q).map(norm);
+  // Para lacunas, aceita também a palavra inteira (ex.: "pranzo" em vez de "o").
+  if (q.kind === 'ending') options = options.concat(options.map((o) => norm(q.stem) + o));
+  if (q.kind === 'fill') options = options.concat(options.map((o) => norm(lastWord(q.before)) + o));
+  if (options.includes(g)) return { ok: true };
+  if (options.map(plain).includes(plain(g)) && g) return { ok: true, accentOnly: true };
+  return { ok: false };
+}
+
+/** Texto do que o aluno respondeu, para mostrar na correção. */
+function givenText(q, given) {
+  if (q.kind === 'gender') return GENDER[given] || given;
+  if (q.kind === 'ending' && given.length <= 3) return q.stem + given;
+  if (q.kind === 'fill' && given.length <= 3) return lastWord(q.before) + given;
+  return given;
+}
+
+export function feedback(q, given, result, rule) {
+  const why = q.why || rule?.short || '';
+  const ruleTag = rule ? h('span.rule-tag', {}, `Regra ${rule.num}`) : null;
+  if (result.ok) {
+    return h('div.feedback.ok', { role: 'status' },
+      h('div.fb-title', {}, h('strong', {}, '✓ Giusto!'), ' ', h('span', {}, 'Correto!')),
+      result.accentOnly ? h('p', { html: `Atenção ao acento: escreve-se <b>${answerText(q)}</b>.` }) : null,
+      q.why ? h('p.fb-why', { html: q.why }) : null);
+  }
+  return h('div.feedback.ko', { role: 'alert' },
+    h('div.fb-title', {}, h('strong', {}, '✗ Sbagliato'), ' ', ruleTag),
+    h('p', { html: `Você respondeu <s>${escapeHtml(givenText(q, given)) || '—'}</s> → o correto é <b>${answerText(q)}</b>.` }),
+    why ? h('p.fb-why', { html: `<span class="why-label">Por quê?</span> ${why}` }) : null);
+}
+
+const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/**
+ * Desenha uma questão. `onAnswer({ given, ok })` é chamado uma única vez.
+ * `prev` = resposta já dada (ao retomar uma sessão), mostra a questão travada.
+ */
+export function renderQuestion(q, { rule, onAnswer, prev, number, big = false } = {}) {
+  const box = h(`div.q.q-${q.kind}${big ? '.q-big' : ''}`, { 'data-id': q.id });
+  const fbSlot = h('div.fb-slot');
+  let done = false;
+
+  const finish = (given, silent) => {
+    if (done) return;
+    done = true;
+    const res = check(q, given);
+    box.classList.add(res.ok ? 'is-ok' : 'is-ko', 'answered');
+    box.querySelectorAll('button.opt, input, button.verify').forEach((n) => { n.disabled = true; });
+    if (q.type === 'choice') {
+      box.querySelectorAll('button.opt').forEach((b) => {
+        if (accepted(q).includes(b.dataset.v)) b.classList.add('correct');
+        else if (b.dataset.v === given) b.classList.add('wrong');
+      });
+    } else {
+      const inp = box.querySelector('input');
+      if (inp) inp.value = given;
+    }
+    fbSlot.append(feedback(q, given, res, rule));
+    if (!silent) onAnswer?.({ given, ok: res.ok });
+  };
+
+  const num = number != null ? h('span.q-num', {}, number) : null;
+
+  if (q.kind === 'gender') {
+    const word = h('span.word', {}, q.w);
+    const head = q.ctx
+      ? h('div.q-head', {}, num, h('span.ctx', { html: q.ctx.replace(q.w, `<mark>${q.w}</mark>`) }), speakBtn(q.ctx))
+      : h('div.q-head', {}, num, word, speakBtn(q.w));
+    box.append(head, h('div.opts', {},
+      ...q.opts.map((v) => h(`button.opt.g-${v}`, { type: 'button', 'data-v': v, onclick: () => finish(v) },
+        h('span.g-badge', {}, v.toUpperCase()), GENDER[v], h('small', {}, GENDER_PT[v])))));
+  } else if (q.kind === 'mc') {
+    box.append(h('div.q-head', {}, num, h('span.ctx', { html: q.q })),
+      h('div.opts', {}, ...q.opts.map((v) => h('button.opt', { type: 'button', 'data-v': v, onclick: () => finish(v) }, v))));
+  } else {
+    const input = h('input', {
+      type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', lang: 'it',
+      'aria-label': 'Sua resposta', enterkeyhint: 'done',
+      onkeydown: (e) => { if (e.key === 'Enter' && input.value.trim()) { e.preventDefault(); finish(input.value.trim()); } },
+    });
+    const verify = h('button.verify', { type: 'button', onclick: () => { if (input.value.trim()) finish(input.value.trim()); else input.focus(); } }, 'Verificar');
+    let line;
+    if (q.kind === 'plural' || q.kind === 'singular') {
+      input.placeholder = q.kind === 'plural' ? 'plurale…' : 'singolare…';
+      line = h('div.q-head', {}, num,
+        h('span.word', {}, q.w), speakBtn(q.w),
+        h('span.arrow', { title: q.kind === 'plural' ? 'plural' : 'singular' }, '→'),
+        h('span.chip', {}, q.kind === 'plural' ? 'plurale' : 'singolare'));
+      box.append(line, h('div.answer-row', {}, input, verify));
+    } else if (q.kind === 'ending') {
+      input.classList.add('mini');
+      input.maxLength = 12;
+      input.placeholder = '?';
+      box.append(h('div.q-head', {}, num,
+        h('span.word.inline', {}, q.stem, input),
+        h(`span.g-hint.g-${q.g}`, { title: GENDER_PT[q.g] }, q.g === 'm' ? 'masc.' : 'fem.'), verify));
+    } else if (q.kind === 'fill') {
+      input.classList.add('mini');
+      input.maxLength = 20;
+      input.placeholder = '?';
+      box.append(h('div.q-head', {}, num, h('span.ctx.inline', {}, q.before, input, q.after), verify));
+    }
+  }
+  box.append(fbSlot);
+  if (prev) finish(prev.given, true);
+  return box;
+}
+
+export { speak };
