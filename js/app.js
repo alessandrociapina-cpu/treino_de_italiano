@@ -642,6 +642,7 @@ const kindLabel = (q) => ({
   ending: 'Completa la parola', fill: 'Completa la frase', mc: 'Scegli la risposta',
   article: 'Scegli l\u2019articolo', artplural: 'Articolo + plurale',
   adj: 'Metti l\u2019aggettivo nella forma giusta', phrase: 'Articolo + nome + aggettivo',
+  verb: 'Completa la frase', transform: 'Riscrivi la frase',
 }[q.kind]);
 
 // ───────────────────────────── Resultado ─────────────────────────────
@@ -736,7 +737,9 @@ function mistakeItem({ q, rule, given }) {
     : q.kind === 'plural' ? `${q.w} → plurale`
       : q.kind === 'singular' ? `${q.w} → singolare`
         : q.kind === 'artplural' ? `${q.w} → articolo + plurale`
-          : q.kind === 'adj' ? `${q.ctx.replace('___', '___')} (${q.base})`
+          : q.kind === 'verb' ? q.ctx + (q.hint ? ` (${q.hint})` : '')
+            : q.kind === 'transform' ? `${q.from} → ${q.how || ''}`
+              : q.kind === 'adj' ? `${q.ctx.replace('___', '___')} (${q.base})`
             : q.kind === 'phrase' ? `${q.w} (${q.base})`
           : q.kind === 'article' ? (q.ctx ? q.ctx.replace('___', '___') : q.w)
             : q.kind === 'ending' ? `${q.stem}_`

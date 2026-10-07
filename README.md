@@ -6,18 +6,18 @@ PWA de treino de gramática italiana para alunos brasileiros, baseado no livro
 ## O que já existe
 
 - **Tela de introdução** animada (tricolor, voo Brasil → Itália, palavras flutuando).
-- **Três módulos prontos** (Capítulos 1 a 3 do livro):
+- **Quatro módulos prontos** (Capítulos 1 a 4 do livro):
   - 18 regras, cada uma escrita **letra a letra numa lousa** (italiano + tradução em português),
     com a tabela de exemplos aparecendo em seguida, pronúncia (🔊) e uma *dica para brasileiros*.
   - Painel lateral **"Tocca a te!"** com exercícios da regra e **correção instantânea**
     (o que você respondeu, a forma correta e o porquê).
   - Os **exercícios do livro** como verificação final, com o gabarito oficial.
   - Módulo 1 — *Nomi: genere e numero* (18 regras, 185 exercícios), Módulo 2 — *Articoli
-    determinativi e indeterminativi* (10 regras, 248) e Módulo 3 — *Aggettivi: concordanza*
-    (11 regras, 222).
+    determinativi e indeterminativi* (10 regras, 248), Módulo 3 — *Aggettivi: concordanza*
+    (11 regras, 222) e Módulo 4 — *Essere e avere: indicativo presente* (8 regras, 202).
   - **Placar final** com nota, estrelas, desempenho por regra e revisão dos erros.
 - **Capítulos longos saem divididos em partes**, cada uma com seu placar e histórico.
-  Os Capítulos 2 e 3 têm três partes cada, de 68 a 87 exercícios. O reforço continua
+  Os Capítulos 2, 3 e 4 têm três partes cada, de 58 a 87 exercícios. O reforço continua
   valendo para o capítulo inteiro.
 - **Rinforzo**: exercícios novos (fora do livro) em 3 níveis — Facile, Medio, Difficile —
   sorteados a cada rodada.
@@ -48,7 +48,8 @@ js/storage.js           histórico e sessões no localStorage
 js/data/capitolo1.js    conteúdo do Capítulo 1 (regras, exercícios, reforço)
 js/data/capitolo2.js    conteúdo do Capítulo 2
 js/data/capitolo3.js    conteúdo do Capítulo 3
-js/data/helpers.js      construtores das questões (gênero, plural, artigo, adjetivo…)
+js/data/capitolo4.js    conteúdo do Capítulo 4
+js/data/helpers.js      construtores das questões (gênero, plural, artigo, adjetivo, verbo…)
 js/data/curriculum.js   roteiro dos capítulos
 sw.js                   cache offline
 ```

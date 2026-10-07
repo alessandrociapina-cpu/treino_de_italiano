@@ -50,6 +50,15 @@ export const AGG = (ctx, base, a, why) => ({ type: 'input', kind: 'adj', ctx, ba
 /** Escreva a expressão inteira: artigo + nome + adjetivo (ex.: maglia (nuovo) → "la maglia nuova"). */
 export const PHRASE = (w, base, a, why) => ({ type: 'input', kind: 'phrase', w, base, a, why });
 
+/**
+ * Complete a lacuna com uma forma curta — verbo, pronome, c’è/ci sono.
+ * `ctx` traz `___` na lacuna e `hint` é a dica entre parênteses (ex.: 'essere').
+ */
+export const VB = (ctx, a, why, hint) => ({ type: 'input', kind: 'verb', ctx, hint, a, why });
+
+/** Reescreva a frase (negativa, forma de cortesia…). `how` rotula a transformação pedida. */
+export const TRASF = (from, a, why, how) => ({ type: 'input', kind: 'transform', from, how, a, why });
+
 /** Atribui ids estáveis e a regra padrão às questões de um bloco. */
 export function tag(questions, prefix, rule) {
   return questions.map((q, i) => ({ ...q, id: `${prefix}-${i + 1}`, rule: q.rule || rule }));

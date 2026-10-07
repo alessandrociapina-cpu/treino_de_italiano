@@ -33,6 +33,12 @@ export function check(q, given) {
   // Para lacunas, aceita também a palavra inteira (ex.: "pranzo" em vez de "o").
   if (q.kind === 'ending') options = options.concat(options.map((o) => norm(q.stem) + o));
   if (q.kind === 'fill') options = options.concat(options.map((o) => norm(lastWord(q.before)) + o));
+  // Numa frase reescrita, a pontuação final e os parênteses do pronome não contam.
+  if (q.kind === 'transform') {
+    const loose = (x) => x.replace(/[.?!…]+$/, '').replace(/[()]/g, '').replace(/\s+/g, ' ').trim();
+    if (options.map(loose).includes(loose(g))) return { ok: true };
+    if (options.map((o) => plain(loose(o))).includes(plain(loose(g))) && g) return { ok: true, accentOnly: true };
+  }
   if (options.includes(g)) return { ok: true };
   if (options.map(plain).includes(plain(g)) && g) return { ok: true, accentOnly: true };
   return { ok: false };
@@ -120,7 +126,19 @@ export function renderQuestion(q, { rule, onAnswer, prev, number, big = false } 
     });
     const verify = h('button.verify', { type: 'button', onclick: () => { if (input.value.trim()) finish(input.value.trim()); else input.focus(); } }, 'Verificar');
     let line;
-    if (q.kind === 'adj') {
+    if (q.kind === 'transform') {
+      input.placeholder = 'riscrivi la frase…';
+      box.append(h('div.q-head', {}, num, h('span.ctx', {}, q.from), speakBtn(q.from),
+        q.how ? h('span.chip', {}, q.how) : null),
+        h('div.answer-row', {}, input, verify));
+    } else if (q.kind === 'verb') {
+      input.classList.add('mid');
+      input.placeholder = '?';
+      const [before, after = ''] = q.ctx.split('___');
+      box.append(h('div.q-head', {}, num,
+        h('span.ctx.inline', {}, before, input, after),
+        q.hint ? h('span.base', {}, `(${q.hint})`) : null, speakBtn(q.ctx.replace('___', '')), verify));
+    } else if (q.kind === 'adj') {
       input.classList.add('mid');
       input.placeholder = '?';
       const [before, after = ''] = q.ctx.split('___');
