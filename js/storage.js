@@ -59,4 +59,9 @@ export const store = {
   reset() { cache = { ...empty(), name: load().name }; save(); },
 };
 
-export const pct = (a) => (a.total ? Math.round((a.correct / a.total) * 100) : 0);
+// Só uma prova sem nenhum erro mostra 100% (247/248 não pode virar "100%").
+export const pct = (a) => {
+  if (!a.total) return 0;
+  if (a.correct >= a.total) return 100;
+  return Math.min(99, Math.round((a.correct / a.total) * 100));
+};

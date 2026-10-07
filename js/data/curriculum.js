@@ -1,12 +1,13 @@
 // Roteiro do curso, seguindo o índice de "Grammatica in contesto".
 // Capítulos com `module` já estão disponíveis; os demais aparecem como "em breve".
 import capitolo1 from './capitolo1.js';
+import capitolo2 from './capitolo2.js';
 
-export const modules = { 1: capitolo1 };
+export const modules = { 1: capitolo1, 2: capitolo2 };
 
 export const curriculum = [
   { id: 1, title: 'Nomi', subtitle: 'Genere e numero', area: 'Cibi e bevande', emoji: '🍝' },
-  { id: 2, title: 'Articoli', subtitle: 'Determinativi e indeterminativi', area: 'Abitazioni', emoji: '🏠' },
+  { id: 2, title: 'Articoli', subtitle: 'Determinativi e indeterminativi', area: 'Abitazioni e ambienti della casa', emoji: '🏠' },
   { id: 3, title: 'Aggettivi', subtitle: 'Concordanza', area: 'Abbigliamento', emoji: '👗' },
   { id: 4, title: 'Essere e avere', subtitle: 'Indicativo presente', area: 'Informazioni personali', emoji: '🙋' },
   { id: 5, title: 'Indicativo presente', subtitle: 'Verbi regolari e irregolari', area: 'Lavoro', emoji: '💼' },

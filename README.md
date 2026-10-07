@@ -6,12 +6,14 @@ PWA de treino de gramática italiana para alunos brasileiros, baseado no livro
 ## O que já existe
 
 - **Tela de introdução** animada (tricolor, voo Brasil → Itália, palavras flutuando).
-- **Módulo 1 — Nomi: genere e numero** (Capítulo 1 do livro):
+- **Dois módulos prontos** (Capítulos 1 e 2 do livro):
   - 18 regras, cada uma escrita **letra a letra numa lousa** (italiano + tradução em português),
     com a tabela de exemplos aparecendo em seguida, pronúncia (🔊) e uma *dica para brasileiros*.
   - Painel lateral **"Tocca a te!"** com exercícios da regra e **correção instantânea**
     (o que você respondeu, a forma correta e o porquê).
-  - Os **Esercizi 1–3 do livro** como verificação final.
+  - Os **exercícios do livro** como verificação final, com o gabarito oficial.
+  - Módulo 1 — *Nomi: genere e numero* (18 regras) e Módulo 2 — *Articoli determinativi
+    e indeterminativi* (10 regras, com escolha de artigo em botões e plural com artigo).
   - **Placar final** com nota, estrelas, desempenho por regra e revisão dos erros.
 - **Rinforzo**: exercícios novos (fora do livro) em 3 níveis — Facile, Medio, Difficile —
   sorteados a cada rodada.
@@ -40,6 +42,8 @@ js/quiz.js              desenho das questões e correção
 js/ui.js                animações (lousa, confete), voz em italiano
 js/storage.js           histórico e sessões no localStorage
 js/data/capitolo1.js    conteúdo do Capítulo 1 (regras, exercícios, reforço)
+js/data/capitolo2.js    conteúdo do Capítulo 2
+js/data/helpers.js      construtores das questões (gênero, plural, artigo…)
 js/data/curriculum.js   roteiro dos capítulos
 sw.js                   cache offline
 ```

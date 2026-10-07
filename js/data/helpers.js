@@ -21,6 +21,26 @@ export const FILL = (before, after, a, why) => ({ type: 'input', kind: 'fill', b
 /** Múltipla escolha livre. */
 export const MC = (q, opts, a, why) => ({ type: 'choice', kind: 'mc', q, opts, a, why });
 
+// Conjuntos de artigos oferecidos como alternativas, escolhidos pela própria resposta.
+const ART_SETS = [
+  ['il', 'lo', "l'", 'la'],
+  ['i', 'gli', 'le'],
+  ['un', 'uno', 'una', "un'"],
+];
+
+/**
+ * Escolha do artigo certo para uma palavra.
+ * `o.opts` troca as alternativas (ex.: definido vs. indefinido) e `o.ctx` põe a palavra
+ * numa frase, com `___` marcando a lacuna.
+ */
+export const ART = (w, a, why, o = {}) => ({
+  type: 'choice', kind: 'article', w, ctx: o.ctx, note: o.note,
+  opts: o.opts || ART_SETS.find((s) => s.includes(a)) || ART_SETS[0], a, why,
+});
+
+/** Escreva o plural da palavra com o artigo (ex.: castello → "i castelli"). */
+export const ARTPL = (w, a, why) => ({ type: 'input', kind: 'artplural', w, a, why });
+
 /** Atribui ids estáveis e a regra padrão às questões de um bloco. */
 export function tag(questions, prefix, rule) {
   return questions.map((q, i) => ({ ...q, id: `${prefix}-${i + 1}`, rule: q.rule || rule }));
