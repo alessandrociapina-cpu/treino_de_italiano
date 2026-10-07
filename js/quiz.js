@@ -120,7 +120,19 @@ export function renderQuestion(q, { rule, onAnswer, prev, number, big = false } 
     });
     const verify = h('button.verify', { type: 'button', onclick: () => { if (input.value.trim()) finish(input.value.trim()); else input.focus(); } }, 'Verificar');
     let line;
-    if (q.kind === 'artplural') {
+    if (q.kind === 'adj') {
+      input.classList.add('mid');
+      input.placeholder = '?';
+      const [before, after = ''] = q.ctx.split('___');
+      box.append(h('div.q-head', {}, num,
+        h('span.ctx.inline', {}, before, input, after),
+        h('span.base', {}, `(${q.base})`), speakBtn(q.ctx.replace('___', q.base)), verify));
+    } else if (q.kind === 'phrase') {
+      input.placeholder = 'articolo + nome + aggettivo…';
+      box.append(h('div.q-head', {}, num, h('span.word', {}, q.w), speakBtn(q.w),
+        h('span.base', {}, `(${q.base})`), h('span.chip', {}, 'articolo + aggettivo')),
+        h('div.answer-row', {}, input, verify));
+    } else if (q.kind === 'artplural') {
       input.placeholder = 'articolo + plurale…';
       box.append(h('div.q-head', {}, num, h('span.word', {}, q.w), speakBtn(q.w),
         h('span.arrow', { title: 'plural' }, '→'), h('span.chip', {}, 'articolo + plurale')),

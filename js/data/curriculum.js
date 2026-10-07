@@ -2,6 +2,7 @@
 // Capítulos com `module` já estão disponíveis; os demais aparecem como "em breve".
 import capitolo1 from './capitolo1.js';
 import capitolo2 from './capitolo2.js';
+import capitolo3 from './capitolo3.js';
 
 /**
  * Um capítulo pode ser dividido em partes (cada uma com seu placar e histórico).
@@ -13,7 +14,7 @@ function normalize(mod) {
   return { ...mod, parts, rules: parts.flatMap((p) => p.rules), book: parts.flatMap((p) => p.book) };
 }
 
-export const modules = { 1: normalize(capitolo1), 2: normalize(capitolo2) };
+export const modules = { 1: normalize(capitolo1), 2: normalize(capitolo2), 3: normalize(capitolo3) };
 
 export const curriculum = [
   { id: 1, title: 'Nomi', subtitle: 'Genere e numero', area: 'Cibi e bevande', emoji: '🍝' },

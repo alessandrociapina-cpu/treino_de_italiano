@@ -41,6 +41,15 @@ export const ART = (w, a, why, o = {}) => ({
 /** Escreva o plural da palavra com o artigo (ex.: castello → "i castelli"). */
 export const ARTPL = (w, a, why) => ({ type: 'input', kind: 'artplural', w, a, why });
 
+/**
+ * Flexione o adjetivo. `ctx` é a frase com `___` na lacuna e `base` é a forma
+ * do dicionário, mostrada entre parênteses (ex.: 'Questa tuta è ___.', 'leggero' → 'leggera').
+ */
+export const AGG = (ctx, base, a, why) => ({ type: 'input', kind: 'adj', ctx, base, a, why });
+
+/** Escreva a expressão inteira: artigo + nome + adjetivo (ex.: maglia (nuovo) → "la maglia nuova"). */
+export const PHRASE = (w, base, a, why) => ({ type: 'input', kind: 'phrase', w, base, a, why });
+
 /** Atribui ids estáveis e a regra padrão às questões de um bloco. */
 export function tag(questions, prefix, rule) {
   return questions.map((q, i) => ({ ...q, id: `${prefix}-${i + 1}`, rule: q.rule || rule }));
