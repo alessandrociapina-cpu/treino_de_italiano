@@ -1,5 +1,5 @@
 import { h, animator, chalkText, speak, speakBtn, confetti, markEnding, formatDate, wait, reducedMotion } from './ui.js';
-import { renderQuestion, answerText } from './quiz.js';
+import { renderQuestion, answerText, joinArt } from './quiz.js';
 import { store, pct } from './storage.js';
 import { modules, curriculum } from './data/curriculum.js';
 
@@ -282,7 +282,7 @@ function viewLesson(id) {
     const already = qs.every((q) => state.answers[q.id]);
     if (already) anim.skip();
 
-    const board = step.type === 'rule' ? ruleBoard(step.rule, anim) : bookBoard(step.ex, anim);
+    const board = step.type === 'rule' ? ruleBoard(step.rule, anim) : bookBoard(step.ex, anim, mod.rules);
     const list = h('div.q-list', {},
       ...qs.map((q, n) => renderQuestion(q, {
         rule: ruleById[q.rule], number: n + 1, prev: state.answers[q.id],
@@ -429,9 +429,11 @@ function ruleBoard(rule, anim) {
 
       if (rule.table) {
         const genderTable = /maschil|femminil/i.test(rule.table.cols.join(' '));
+        const mark = rule.table.mark;
         const rows = rule.table.rows.map((row) => later(h('tr', {}, ...row.map((w, ci) => {
           const other = genderTable ? null : row[1 - ci];
-          return h('td', {}, h('button.word-btn', { type: 'button', title: 'Ouvir', onclick: () => speak(w), html: markEnding(w, other) }));
+          const html = mark === 'article' ? markArticle(w) : mark === 'none' ? w : markEnding(w, other);
+          return h('td', {}, h('button.word-btn', { type: 'button', title: 'Ouvir', onclick: () => speak(w), html }));
         }))));
         content.append(h(`table.chalk-table${genderTable ? '.gender' : '.number'}`, {},
           h('thead', {}, h('tr', {}, ...rule.table.cols.map((c) => h('th', { class: /femmin/i.test(c) ? 'col-f' : /maschil/i.test(c) ? 'col-m' : '' }, c)))),
@@ -461,24 +463,38 @@ function ruleBoard(rule, anim) {
   });
 }
 
+/** Destaca o artigo (primeira palavra, ou l'/un' colado) nas tabelas de artigos. */
+function markArticle(cell) {
+  const m = cell.match(/^((?:l'|un'|lo|il|la|gli|le|i|uno|una|un)\s?)(.*)$/i);
+  return m ? `<span class="end">${m[1].trim()}</span>${m[1].endsWith(' ') ? ' ' : ''}${m[2]}` : cell;
+}
+
 /** Destaca as terminações (-o, -a, -zione…) no texto da regra. */
 function highlightEndings(text) {
   return text.replace(/(^|\s)(-[a-zàèéìòù/]+)/gi, '$1<span class="end">$2</span>');
 }
 
-function bookBoard(ex, anim) {
+/**
+ * Lousa dos exercícios do livro. Como eles misturam todas as regras, a lousa traz
+ * um resumo (promemoria) para consulta — que também ocupa o espaço da lousa fixa.
+ */
+function bookBoard(ex, anim, rules = []) {
   return chalkboard({
     label: 'Esercizi · Verifica', title: ex.title, anim,
     build(content) {
       const itText = h('p.chalk-text');
       const ptText = later(h('p.chalk-pt', {}, ex.pt));
+      const memo = later(h('div.memo', {},
+        h('b.memo-title', {}, '📌 Promemoria — as regras do capítulo'),
+        h('ol.memo-list', {}, ...rules.map((rl) => h('li', {},
+          h('b', {}, rl.title), h('span', { html: rl.short }))))));
       const tip = later(h('div.tip', {}, h('span.tip-flag', {}, '📘'),
         h('div', {}, h('b', {}, 'Exercício do livro'), h('p', {}, 'Agora é hora de juntar todas as regras! Se errar, a correção mostra qual regra revisar.'))));
-      content.append(h('div.chalk-line', {}, itText, speakBtn(ex.it)), ptText, tip);
+      content.append(h('div.chalk-line', {}, itText, speakBtn(ex.it)), ptText, tip, memo);
       const play = chalkText(itText, ex.it);
       return [
         async () => { await play(anim); reveal(ptText); await anim.pause(500); },
-        async () => reveal(tip),
+        async () => { reveal(tip); await anim.pause(300); reveal(memo); },
       ];
     },
   });
@@ -493,6 +509,7 @@ function measureBoards(mod, width) {
   document.body.append(probe);
   const quiet = animator();
   quiet.cancel();
+  // O resumo das regras não entra na medida: ele se ajusta ao espaço que sobrar.
   const boards = [...mod.rules.map((r) => ruleBoard(r, quiet)), ...mod.book.map((b) => bookBoard(b, quiet))];
   boards.forEach((b) => probe.append(b.node));
   const max = Math.max(...boards.map((b) => b.node.offsetHeight));
@@ -592,6 +609,7 @@ function viewPractice(id, lvl) {
 const kindLabel = (q) => ({
   gender: 'Maschile o femminile?', plural: 'Scrivi il plurale', singular: 'Scrivi il singolare',
   ending: 'Completa la parola', fill: 'Completa la frase', mc: 'Scegli la risposta',
+  article: 'Scegli l\u2019articolo', artplural: 'Articolo + plurale',
 }[q.kind]);
 
 // ───────────────────────────── Resultado ─────────────────────────────
@@ -682,10 +700,13 @@ function mistakeItem({ q, rule, given }) {
   const label = q.kind === 'gender' ? (q.ctx || q.w)
     : q.kind === 'plural' ? `${q.w} → plurale`
       : q.kind === 'singular' ? `${q.w} → singolare`
-        : q.kind === 'ending' ? `${q.stem}_`
-          : q.kind === 'fill' ? `${q.before}_${q.after}`
-            : q.q.replace(/<[^>]+>/g, '');
+        : q.kind === 'artplural' ? `${q.w} → articolo + plurale`
+          : q.kind === 'article' ? (q.ctx ? q.ctx.replace('___', '___') : q.w)
+            : q.kind === 'ending' ? `${q.stem}_`
+              : q.kind === 'fill' ? `${q.before}_${q.after}`
+                : q.q.replace(/<[^>]+>/g, '');
   const givenTxt = q.kind === 'gender' ? ({ m: 'maschile', f: 'femminile' }[given] || given)
+    : q.kind === 'article' && !q.ctx ? joinArt(given, q.w)
     : q.kind === 'ending' && given.length <= 3 ? q.stem + given
       : q.kind === 'fill' && given.length <= 3 ? (q.before.match(/(\S+)$/) || ['', ''])[1] + given
         : given;

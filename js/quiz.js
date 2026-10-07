@@ -3,6 +3,11 @@ import { h, speakBtn, speak } from './ui.js';
 
 const GENDER = { m: 'maschile', f: 'femminile' };
 const GENDER_PT = { m: 'masculino', f: 'feminino' };
+const NO_ART = '—';
+
+/** Junta artigo e palavra: "l'" cola na palavra, os demais levam espaço. */
+export const joinArt = (art, word) =>
+  (art === NO_ART ? word : art.endsWith("'") ? art + word : `${art} ${word}`);
 
 const norm = (s) => String(s ?? '').toLowerCase().replace(/[’`´]/g, "'").replace(/\s+/g, ' ').trim();
 const plain = (s) => norm(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -15,6 +20,7 @@ export function answerText(q) {
   if (q.kind === 'gender') return GENDER[a];
   if (q.kind === 'ending') return q.stem + a;
   if (q.kind === 'fill') return lastWord(q.before) + a;
+  if (q.kind === 'article') return q.ctx ? q.ctx.replace('___', a === NO_ART ? '' : a).replace(/\s+/g, ' ').trim() : joinArt(a, q.w);
   return a;
 }
 
@@ -37,6 +43,7 @@ function givenText(q, given) {
   if (q.kind === 'gender') return GENDER[given] || given;
   if (q.kind === 'ending' && given.length <= 3) return q.stem + given;
   if (q.kind === 'fill' && given.length <= 3) return lastWord(q.before) + given;
+  if (q.kind === 'article') return q.ctx ? q.ctx.replace('___', given === NO_ART ? '' : given).replace(/\s+/g, ' ').trim() : joinArt(given, q.w);
   return given;
 }
 
@@ -95,6 +102,13 @@ export function renderQuestion(q, { rule, onAnswer, prev, number, big = false } 
     box.append(head, h('div.opts', {},
       ...q.opts.map((v) => h(`button.opt.g-${v}`, { type: 'button', 'data-v': v, onclick: () => finish(v) },
         h('span.g-badge', {}, v.toUpperCase()), GENDER[v], h('small', {}, GENDER_PT[v])))));
+  } else if (q.kind === 'article') {
+    const head = q.ctx
+      ? h('div.q-head', {}, num, h('span.ctx', { html: q.ctx.replace('___', '<span class="blank">?</span>') }), speakBtn(q.ctx.replace('___', '')))
+      : h('div.q-head', {}, num, h('span.word', {}, q.w), speakBtn(q.w));
+    if (q.note) head.append(h('span.note', {}, q.note));
+    box.append(head, h('div.opts.opts-art', {},
+      ...q.opts.map((v) => h('button.opt.art', { type: 'button', 'data-v': v, onclick: () => finish(v) }, v))));
   } else if (q.kind === 'mc') {
     box.append(h('div.q-head', {}, num, h('span.ctx', { html: q.q })),
       h('div.opts', {}, ...q.opts.map((v) => h('button.opt', { type: 'button', 'data-v': v, onclick: () => finish(v) }, v))));
@@ -106,7 +120,12 @@ export function renderQuestion(q, { rule, onAnswer, prev, number, big = false } 
     });
     const verify = h('button.verify', { type: 'button', onclick: () => { if (input.value.trim()) finish(input.value.trim()); else input.focus(); } }, 'Verificar');
     let line;
-    if (q.kind === 'plural' || q.kind === 'singular') {
+    if (q.kind === 'artplural') {
+      input.placeholder = 'articolo + plurale…';
+      box.append(h('div.q-head', {}, num, h('span.word', {}, q.w), speakBtn(q.w),
+        h('span.arrow', { title: 'plural' }, '→'), h('span.chip', {}, 'articolo + plurale')),
+        h('div.answer-row', {}, input, verify));
+    } else if (q.kind === 'plural' || q.kind === 'singular') {
       input.placeholder = q.kind === 'plural' ? 'plurale…' : 'singolare…';
       line = h('div.q-head', {}, num,
         h('span.word', {}, q.w), speakBtn(q.w),
