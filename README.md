@@ -109,6 +109,8 @@ js/data/capitolo18.js   conteúdo do Capítulo 18
 js/data/helpers.js      construtores das questões (gênero, plural, artigo, adjetivo, verbo…)
 js/data/curriculum.js   roteiro dos capítulos
 sw.js                   cache offline
+test/                   testes de ponta a ponta (ver test/README.md)
+.github/workflows/      publicação no GitHub Pages
 ```
 
 ### Adicionar um capítulo
