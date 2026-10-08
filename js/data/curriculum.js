@@ -10,6 +10,7 @@ import capitolo7 from './capitolo7.js';
 import capitolo8 from './capitolo8.js';
 import capitolo9 from './capitolo9.js';
 import capitolo10 from './capitolo10.js';
+import capitolo11 from './capitolo11.js';
 
 /**
  * Um capítulo pode ser dividido em partes (cada uma com seu placar e histórico).
@@ -26,6 +27,7 @@ export const modules = {
   4: normalize(capitolo4), 5: normalize(capitolo5), 6: normalize(capitolo6),
   7: normalize(capitolo7), 8: normalize(capitolo8),
   9: normalize(capitolo9), 10: normalize(capitolo10),
+  11: normalize(capitolo11),
 };
 
 export const curriculum = [
