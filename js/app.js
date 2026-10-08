@@ -286,6 +286,9 @@ function viewLesson(id, partId) {
       nav.querySelectorAll('button').forEach((b) => { b.disabled = true; });
       currentAnim?.skip();
       await eraseBoard(body);
+      // Se o aluno saiu da lição durante o apagador, esta tela já não existe:
+      // gravar a tentativa ou navegar daqui arrancaria ele de onde foi.
+      if (!body.isConnected) return;
       if (target === 'end') finishLesson(); else show(target);
     };
     const prevBtn = i > 0 ? h('button.btn.btn-ghost', { type: 'button', onclick: () => goTo(i - 1) }, '← Anterior') : h('span');
