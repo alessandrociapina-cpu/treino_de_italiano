@@ -54,7 +54,16 @@ python3 -m http.server 8000
 # abra http://localhost:8000
 ```
 
-Para publicar, basta hospedar os arquivos estáticos (ex.: GitHub Pages).
+## Publicação
+
+O app é publicado no GitHub Pages em
+**https://alessandrociapina-cpu.github.io/treino_de_italiano/**.
+
+O workflow `.github/workflows/pages.yml` envia a pasta do repositório a cada push na `main`
+(e pode ser disparado à mão em *Actions → Publicar no GitHub Pages*). Não há build: todos os
+caminhos do app são relativos, por isso ele funciona no subcaminho `/treino_de_italiano/`.
+Ao publicar uma mudança, aumente `VERSION` em `sw.js` para que os celulares com o app
+instalado recebam a versão nova.
 
 ## Estrutura
 
