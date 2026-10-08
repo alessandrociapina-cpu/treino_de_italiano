@@ -312,8 +312,6 @@ function viewLesson(id, partId) {
     const already = qs.every((q) => state.answers[q.id]);
     if (already) anim.skip();
 
-    // Numa parte de revisão (sem regras próprias), o resumo traz as regras do capítulo inteiro.
-    const memoRules = part.rules.length ? part.rules : mod.rules;
     const board = step.type === 'rule' ? ruleBoard(step.rule, anim) : bookBoard(step.ex, anim, memoRules);
     const list = h('div.q-list', {},
       ...qs.map((q, n) => renderQuestion(q, {
@@ -348,6 +346,9 @@ function viewLesson(id, partId) {
     });
   }
 
+  // Numa parte de revisão (sem regras próprias), o resumo traz as regras do capítulo inteiro.
+  const memoRules = part.rules.length ? part.rules : mod.rules;
+
   // Mantém todas as lousas do módulo com a altura da maior (recalcula ao mudar a largura).
   let measuredWidth = 0;
   function fitBoard(force) {
@@ -356,7 +357,7 @@ function viewLesson(id, partId) {
     const w = Math.round(board.getBoundingClientRect().width);
     if (w && (w !== measuredWidth || force)) {
       measuredWidth = w;
-      body.style.setProperty('--board-h', `${measureBoards(part, w)}px`);
+      body.style.setProperty('--board-h', `${measureBoards(part, w, memoRules)}px`);
     }
     // Lousa mais alta que a tela não pode ficar "grudada" no topo: rola junto com a página.
     body.classList.toggle('tall-board', board.offsetHeight > innerHeight - 170);
@@ -548,13 +549,14 @@ function bookBoard(ex, anim, rules = []) {
  * Altura fixa da lousa: mede a lousa de todas as regras e exercícios da parte
  * (já com o conteúdo completo) na largura atual e usa a maior.
  */
-function measureBoards(part, width) {
+function measureBoards(part, width, memoRules) {
   const probe = h('div.board-measure', { style: { width: `${width}px` } });
   document.body.append(probe);
   const quiet = animator();
   quiet.cancel();
-  // O resumo das regras não entra na medida: ele se ajusta ao espaço que sobrar.
-  const boards = [...part.rules.map((r) => ruleBoard(r, quiet)), ...part.book.map((b) => bookBoard(b, quiet))];
+  // O resumo das regras entra na medida com altura limitada (.board-measure .memo-list):
+  // na lousa de verdade ele ocupa o espaço que sobrar e rola, sem esticar a lousa.
+  const boards = [...part.rules.map((r) => ruleBoard(r, quiet)), ...part.book.map((b) => bookBoard(b, quiet, memoRules))];
   boards.forEach((b) => probe.append(b.node));
   const max = Math.max(...boards.map((b) => b.node.offsetHeight));
   probe.remove();
