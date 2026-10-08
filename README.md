@@ -54,6 +54,20 @@ python3 -m http.server 8000
 # abra http://localhost:8000
 ```
 
+## Testes
+
+```bash
+npm i -D playwright && npx playwright install chromium   # só na primeira vez
+node test/all.mjs --rapido   # uns 5 min
+node test/all.mjs            # tudo, com o hscroll (uns 25 min)
+```
+
+Testes de ponta a ponta: cada parte de cada capítulo é percorrida até o fim e
+tem de fechar em 100%, toda resposta aceita passa pelo `check()` do app, a lousa
+mantém altura constante no celular, a página nunca rola na horizontal e o app
+funciona no subcaminho do GitHub Pages. Detalhes — e o que eles **não** pegam —
+em [`test/README.md`](test/README.md).
+
 ## Publicação
 
 O app é publicado no GitHub Pages em
@@ -95,6 +109,8 @@ js/data/capitolo18.js   conteúdo do Capítulo 18
 js/data/helpers.js      construtores das questões (gênero, plural, artigo, adjetivo, verbo…)
 js/data/curriculum.js   roteiro dos capítulos
 sw.js                   cache offline
+test/                   testes de ponta a ponta (ver test/README.md)
+.github/workflows/      publicação no GitHub Pages
 ```
 
 ### Adicionar um capítulo
