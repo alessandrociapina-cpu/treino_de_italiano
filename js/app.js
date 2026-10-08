@@ -708,7 +708,7 @@ function viewResult(attemptId) {
     });
     breakdown = h('section.card', {},
       h('h3', {}, 'Desempenho por regra'),
-      h('div.rule-chips', {}, ...(part?.rules || mod.rules).map((r) => {
+      h('div.rule-chips', {}, ...ruleChipsFor(part?.rules?.length ? part.rules : mod.rules, wrongRules, mod).map((r) => {
         const n = wrongRules.get(r.id) || 0;
         return h(`span.rule-chip${n === 0 ? '.good' : n === 1 ? '.mid' : '.bad'}`, { title: r.title },
           h('b', {}, r.num), ` ${r.title}`, n ? h('small', {}, ` · ${n} erro${n > 1 ? 's' : ''}`) : ' ✓');
@@ -748,6 +748,15 @@ function viewResult(attemptId) {
     ));
 
   if (isLatest && p >= 70) wait(500).then(confetti);
+}
+
+/**
+ * Regras do quadro de desempenho: as da parte e, depois, as de outras partes
+ * que um exercício do livro cobrou e o aluno errou — senão esses erros somem.
+ */
+function ruleChipsFor(rules, wrongRules, mod) {
+  const extra = mod.rules.filter((r) => wrongRules.has(r.id) && !rules.includes(r));
+  return [...rules, ...extra];
 }
 
 function mistakeItem({ q, rule, given }) {

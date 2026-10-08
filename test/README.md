@@ -24,6 +24,7 @@ existir no ambiente mas fora do projeto, aponte `PLAYWRIGHT_MODULE` para o
 |---|---|
 | `answers.mjs` | Toda resposta declarada como aceita (inclusive cada alternativa de `a: [...]`) passa pelo `check()` do app, e toda múltipla escolha tem a resposta certa entre as opções. Roda dentro do navegador, porque `js/quiz.js` depende de `window`. |
 | `lesson.mjs` | Cada parte de cada capítulo é percorrida até o fim respondendo com o gabarito do próprio módulo, e tem de fechar em 100%. Depois joga uma rodada de cada nível de reforço. Qualquer erro de console ou requisição falha reprova. |
+| `errors.mjs` | O caminho do erro. Em **cada** questão de cada capítulo (regras, livro e reforço) responde errado como o aluno faria e confere a correção: a resposta é recusada e conta uma vez só, a questão trava, a opção errada e a certa ficam marcadas, aparece o que o aluno escreveu (escapado, nunca como HTML), a resposta certa — que o próprio `check()` aceita —, a explicação e a regra a revisar. Confere também a resposta só sem acento (aceita, com aviso) e a correção redesenhada ao retomar a sessão. Depois, pela interface, percorre a primeira parte de cada capítulo errando metade, recarrega no meio, e confere placar, resultado, revisão dos erros, desempenho por regra, histórico e um erro no reforço. |
 | `layout.mjs` | No celular (390px) e no desktop a lousa mantém altura constante entre os passos (se oscila, a página pula enquanto o aluno estuda) e o conteúdo não vaza da altura reservada; no celular, nenhuma tabela estoura o invólucro que rola na horizontal. |
 | `hscroll.mjs` | A 390px a página nunca rola na horizontal, em nenhum passo de nenhuma parte de nenhum capítulo. É o mais lento, e já pegou uma regressão que nenhum outro pegou. |
 | `subpath.mjs` | O app funciona servido num subcaminho, que é como o GitHub Pages o entrega (`/treino_de_italiano/`): intro, home, lição, escopo do service worker e `start_url`/ícones do manifest. |
@@ -64,10 +65,10 @@ Vale saber antes de confiar neles:
   trabalho de revisão humana — os gabaritos usados estão citados na mensagem de
   commit de cada módulo.
 - **Qualidade pedagógica.** Se uma explicação (`why`) está confusa, se uma dica
-  está errada ou se um exercício é ambíguo, nenhum teste reclama.
+  está errada ou se um exercício é ambíguo, nenhum teste reclama. O `errors.mjs`
+  garante que toda correção *tem* resposta, porquê e regra — não que estejam
+  certos.
 - **Acessibilidade.** Navegação por teclado, leitor de tela, contraste e foco
   não são verificados.
 - **Aparência.** Não há comparação de imagens; o `layout.mjs` só mede altura da
   lousa, vazamento do conteúdo e estouro de tabela.
-- **O caminho do erro.** Os testes acertam tudo de propósito. A correção
-  instantânea — o que o aluno vê quando erra — não é exercitada em lugar nenhum.

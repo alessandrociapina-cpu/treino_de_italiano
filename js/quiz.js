@@ -30,6 +30,9 @@ const lastWord = (s) => (s.match(/(\S+)$/) || ['', ''])[1];
 export function check(q, given) {
   const g = norm(given);
   let options = accepted(q).map(norm);
+  // Na múltipla escolha o aluno não digita: a opção é exata. Sem isso, escolher a
+  // armadilha "da" em vez de "dà" contaria como acerto com aviso de acento.
+  if (q.type === 'choice') return { ok: options.includes(g) };
   // Para lacunas, aceita também a palavra inteira (ex.: "pranzo" em vez de "o").
   if (q.kind === 'ending') options = options.concat(options.map((o) => norm(q.stem) + o));
   if (q.kind === 'fill') options = options.concat(options.map((o) => norm(lastWord(q.before)) + o));
@@ -64,7 +67,7 @@ export function feedback(q, given, result, rule) {
   }
   return h('div.feedback.ko', { role: 'alert' },
     h('div.fb-title', {}, h('strong', {}, '✗ Sbagliato'), ' ', ruleTag),
-    h('p', { html: `Você respondeu <s>${escapeHtml(givenText(q, given)) || '—'}</s> → o correto é <b>${answerText(q)}</b>.` }),
+    h('p', { html: `Você respondeu <s>${escapeHtml(givenText(q, given)) || '—'}</s> → o correto é <b>${answerText(q)}</b>${/[.?!…]$/.test(answerText(q)) ? '' : '.'}` }),
     why ? h('p.fb-why', { html: `<span class="why-label">Por quê?</span> ${why}` }) : null);
 }
 
