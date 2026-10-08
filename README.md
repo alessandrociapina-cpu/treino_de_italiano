@@ -6,7 +6,7 @@ PWA de treino de gramática italiana para alunos brasileiros, baseado no livro
 ## O que já existe
 
 - **Tela de introdução** animada (tricolor, voo Brasil → Itália, palavras flutuando).
-- **Doze módulos prontos** (Capítulos 1 a 12 do livro):
+- **Treze módulos prontos** (Capítulos 1 a 13 do livro):
   - Cada regra escrita **letra a letra numa lousa** (italiano + tradução em português),
     com a tabela de exemplos aparecendo em seguida, pronúncia (🔊) e uma *dica para brasileiros*.
   - Painel lateral **"Tocca a te!"** com exercícios da regra e **correção instantânea**
@@ -28,6 +28,7 @@ PWA de treino de gramática italiana para alunos brasileiros, baseado no livro
 | 10 | *Verbo piacere* | 8 | 164 | 2 |
 | 11 | *Indicativo passato prossimo* | 14 | 338 | 5 |
 | 12 | *Indicativo imperfetto* | 14 | 338 | 5 |
+| 13 | *Indicativo futuro* | 11 | 232 | 4 |
 
 - **Capítulos longos saem divididos em partes**, cada uma com seu placar e histórico
   (de 42 a 87 exercícios por parte). O reforço continua valendo para o capítulo inteiro.
@@ -69,6 +70,7 @@ js/data/capitolo9.js    conteúdo do Capítulo 9
 js/data/capitolo10.js   conteúdo do Capítulo 10
 js/data/capitolo11.js   conteúdo do Capítulo 11
 js/data/capitolo12.js   conteúdo do Capítulo 12
+js/data/capitolo13.js   conteúdo do Capítulo 13
 js/data/helpers.js      construtores das questões (gênero, plural, artigo, adjetivo, verbo…)
 js/data/curriculum.js   roteiro dos capítulos
 sw.js                   cache offline
