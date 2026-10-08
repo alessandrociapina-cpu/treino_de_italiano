@@ -474,9 +474,14 @@ function ruleBoard(rule, anim) {
           return h('td', {}, h('button.word-btn', { type: 'button', title: 'Ouvir', onclick: () => speak(w), html }));
         }))));
         const kind = genderTable ? '.gender' : numberTable ? '.number' : '.plain';
-        content.append(h(`table.chalk-table${kind}${rule.table.wide ? '.wide' : ''}`, {},
+        // Numa tabela larga a 1ª coluna vira rótulo (di, a, da…); `keys: false`
+        // desliga isso quando ela traz conteúdo como as demais.
+        const wide = rule.table.wide ? (rule.table.keys === false ? '.wide.nokey' : '.wide') : '';
+        // O invólucro rola na horizontal: numa tela estreita a tabela desliza
+        // em vez de esticar a lousa (e a página junto).
+        content.append(h('div.table-wrap', {}, h(`table.chalk-table${kind}${wide}`, {},
           h('thead', {}, h('tr', {}, ...rule.table.cols.map((c) => h('th', { class: /femmin/i.test(c) ? 'col-f' : /maschil/i.test(c) ? 'col-m' : '' }, c)))),
-          h('tbody', {}, ...rows)));
+          h('tbody', {}, ...rows))));
         steps.push(async () => { for (const tr of rows) { reveal(tr); await anim.pause(260); } });
       }
       if (rule.examples) {

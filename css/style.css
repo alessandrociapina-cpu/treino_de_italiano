@@ -314,7 +314,8 @@ button { font: inherit; color: inherit; }
 }
 .chalk-pt::before { content: '🇧🇷 '; }
 .chalk-extra { margin-top: 10px; }
-.chalk-table { width: 100%; border-collapse: collapse; font-size: 1.6rem; }
+.table-wrap { overflow-x: auto; }
+.chalk-table { width: 100%; min-width: min-content; border-collapse: collapse; font-size: 1.6rem; }
 .chalk-table th { font-family: var(--font); font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; text-align: left; padding: 6px 8px; border-bottom: 2px dashed rgba(255, 255, 255, .35); color: var(--chalk-dim); }
 .chalk-table th.col-m { color: var(--chalk-blue); }
 .chalk-table th.col-f { color: var(--chalk-pink); }
@@ -323,6 +324,8 @@ button { font: inherit; color: inherit; }
 .chalk-table.wide { font-size: 1.15rem; }
 .chalk-table.wide th { font-size: .68rem; letter-spacing: .08em; }
 .chalk-table.wide td:first-child .word-btn { color: var(--chalk-dim); font-family: var(--font); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+/* `keys: false`: a 1ª coluna é conteúdo como as outras, não um rótulo. */
+.chalk-table.wide.nokey td:first-child .word-btn { color: var(--chalk); font-family: var(--hand); font-size: inherit; text-transform: none; letter-spacing: normal; }
 .chalk-table.wide .word-btn { padding: 1px 4px; }
 .chalk-table.gender td:first-child .word-btn { color: var(--chalk-blue); }
 .chalk-table.gender td:nth-child(2) .word-btn { color: var(--chalk-pink); }
@@ -438,8 +441,9 @@ button { font: inherit; color: inherit; }
 .base { font-family: var(--serif); font-style: italic; color: var(--ink-2); font-size: .95rem; }
 .q.is-ok input { border-color: var(--ok); color: var(--ok); }
 .q.is-ko input { border-color: var(--ko); color: var(--ko); text-decoration: line-through; }
-.answer-row { display: flex; gap: 8px; margin-top: 8px; }
-.answer-row input { flex: 1; }
+/* O campo pode encolher e, se faltar espaço, o botão desce para a linha de baixo. */
+.answer-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.answer-row input { flex: 1 1 8em; min-width: 0; }
 .verify { border: 0; background: var(--verde); color: #fff; font-weight: 800; border-radius: 12px; padding: .5em 1em; cursor: pointer; }
 .verify:disabled { display: none; }
 .g-hint { font-size: .72rem; font-weight: 800; border-radius: 999px; padding: 2px 8px; }
@@ -550,7 +554,8 @@ button { font: inherit; color: inherit; }
 
 /* ───────────── Responsivo ───────────── */
 @media (max-width: 900px) {
-  .lesson-grid { grid-template-columns: 1fr; }
+  /* minmax(0, …) — sem isso a coluna não encolhe abaixo do conteúdo e a página rola de lado. */
+  .lesson-grid { grid-template-columns: minmax(0, 1fr); }
   .board { position: relative; top: 0; }
 }
 @media (max-width: 640px) {
