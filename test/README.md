@@ -31,32 +31,48 @@ existir no ambiente mas fora do projeto, aponte `PLAYWRIGHT_MODULE` para o
 `lib.mjs` tem as peças comuns: o servidor estático, a resolução do Playwright e
 as rotinas que respondem um passo e avançam a lição.
 
-## Problema conhecido
+## Problemas conhecidos
 
 O `layout.mjs` mantém uma lista `CONHECIDOS`: problemas já diagnosticados que
 ficam registrados em vez de reprovar o conjunto, para que uma falha nova não se
 confunda com uma velha. Se um deles parar de acontecer, o teste avisa para tirar
 da lista.
 
-Hoje há um: **no celular, a lousa do Capítulo 1 salta de 914px para 1589px** ao
-passar das regras para os exercícios do livro.
+Os nove de hoje apareceram na primeira vez que o conjunto rodou nos 18
+capítulos, e **todos são dos capítulos 1 a 8** — construídos antes destas
+checagens existirem. São os primeiros candidatos a uma revisão.
+
+### A lousa salta entre as regras e os exercícios (caps. 1, 5g, 7c)
+
+No celular, ao passar das regras para os exercícios do livro, a lousa muda de
+altura: 914 → 1589px no Capítulo 1, 1953 → 1899px em 5g, 914 → 968px em 7c.
 
 A causa está em `measureBoards` (`js/app.js`), que chama `bookBoard(b, quiet)`
 sem o terceiro argumento. O *Promemoria* — a lista com o resumo das regras —
-fica vazio na medição, então a altura reservada sai menor do que a real. No
+fica vazio na medição, então a altura reservada sai menor que a real. No
 Capítulo 1, que tem 18 regras numa parte só, a diferença chega a 675px.
 
 O `.memo` foi feito para encolher e rolar (`flex: 1` + `overflow-y: auto`), mas
 isso só funciona quando a lousa tem altura **definida**. No desktop ela ganha
 altura da coluna ao lado e o resumo rola; no celular, empilhada, a lousa só tem
-`min-height` e o resumo a estica. Por isso o problema não aparece no desktop.
+`min-height` e o resumo a estica. Por isso não aparece no desktop.
 
-Dois caminhos possíveis, nenhum testado: passar `part.rules` na medição (mas aí
-todas as lousas de regra do capítulo ficariam com 1589px, o que é pior numa tela
-de 844px), ou dar altura definida à lousa no celular
+Dois caminhos, nenhum testado: passar `part.rules` na medição — mas aí todas as
+lousas de regra do Capítulo 1 ficariam com 1589px numa tela de 844px, o que é
+pior —, ou dar altura definida à lousa no celular
 (`@media (max-width: 900px) { .lesson-grid > .board { height: var(--board-h) } }`)
 para que o resumo volte a rolar. A segunda mexe no layout mobile dos 18
 capítulos e pede rodar `layout.mjs` e `hscroll.mjs` inteiros depois.
+
+### Tabelas mais largas que a tela (caps. 5b, 5d, 5e ×3, 8a)
+
+Estouram o invólucro de 9 a 66px. Não quebram nada: o `.table-wrap` rola na
+horizontal e a página não acompanha (o `hscroll.mjs` passa). Mas o aluno precisa
+arrastar a tabela para ler o fim.
+
+Dos capítulos 9 em diante as tabelas foram remodeladas para caber — menos
+colunas, cabeçalhos curtos. Nos primeiros não, porque esta checagem ainda não
+existia. O conserto é por tabela, no arquivo de dados do capítulo.
 
 ## O que estes testes **não** pegam
 

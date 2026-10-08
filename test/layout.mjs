@@ -12,16 +12,28 @@ const TABLE_SLACK = 4;
 // Problemas já diagnosticados e ainda não corrigidos. Ficam listados em vez de
 // reprovar o conjunto, para que uma falha nova não se confunda com uma velha.
 // Se um deles parar de acontecer, o teste avisa para tirar daqui.
+const MEMO = 'measureBoards chama bookBoard(b, quiet) sem passar as regras (js/app.js), '
+  + 'então o Promemoria fica vazio na medição e a altura reservada sai menor que a real. '
+  + 'Passadas as regras, cada lousa de exercício fica na sua altura natural. O .memo '
+  + 'deveria encolher e rolar (flex:1 + overflow-y:auto), mas isso exige altura definida: '
+  + 'no desktop ela vem da coluna ao lado, no celular a lousa só tem min-height e cresce.';
+
+const TABELA = 'Tabela mais larga que a tela. Não quebra nada — o .table-wrap rola na '
+  + 'horizontal e a página não acompanha (o hscroll passa) —, mas o aluno precisa arrastar '
+  + 'a tabela para ler o fim. Dos capítulos 9 em diante as tabelas foram remodeladas (menos '
+  + 'colunas, cabeçalhos curtos) para caber; nos primeiros não, porque esta checagem ainda '
+  + 'não existia.';
+
 const CONHECIDOS = [
-  {
-    chave: 'cap 1 parte u: lousa oscila',
-    porque: 'measureBoards chama bookBoard(b, quiet) sem passar as regras, então o '
-      + 'Promemoria fica vazio na medição (js/app.js, measureBoards). Com as 18 regras '
-      + 'do Capítulo 1 a lousa reservada dá 914px e a de exercícios renderiza a 1589px. '
-      + 'O .memo deveria encolher e rolar (flex:1 + overflow-y:auto), mas isso exige '
-      + 'altura definida: no desktop ela vem da coluna ao lado, no celular a lousa só '
-      + 'tem min-height e cresce.',
-  },
+  { chave: 'cap 1 parte u: lousa oscila', porque: MEMO },
+  { chave: 'cap 5 parte g: lousa oscila', porque: MEMO },
+  { chave: 'cap 7 parte c: lousa oscila', porque: MEMO },
+  { chave: 'cap 5 parte b (Regra 8', porque: TABELA },
+  { chave: 'cap 5 parte d (Regra 13', porque: TABELA },
+  { chave: 'cap 5 parte e (Regra 14', porque: TABELA },
+  { chave: 'cap 5 parte e (Regra 15', porque: TABELA },
+  { chave: 'cap 5 parte e (Regra 16', porque: TABELA },
+  { chave: 'cap 8 parte a (Regra 1', porque: TABELA },
 ];
 
 const { base, close } = await serve();
