@@ -71,6 +71,59 @@ export function feedback(q, given, result, rule) {
     why ? h('p.fb-why', { html: `<span class="why-label">Por quê?</span> ${why}` }) : null);
 }
 
+/** Gerador pseudoaleatório determinístico a partir de um texto. */
+function seeded(text) {
+  let seed = 2166136261;
+  for (const ch of text) seed = Math.imul(seed ^ ch.charCodeAt(0), 16777619);
+  // Espalha bem o hash: textos parecidos não podem dar sorteios parecidos.
+  seed ^= seed >>> 16; seed = Math.imul(seed, 0x85ebca6b);
+  seed ^= seed >>> 13; seed = Math.imul(seed, 0xc2b2ae35);
+  seed ^= seed >>> 16;
+  return () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffle(arr, rand) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * Opções da múltipla escolha na ordem em que o aluno as vê. Nos dados a resposta
+ * certa quase sempre vem primeiro; desenhada assim, dava para acertar pela posição.
+ *
+ * O lugar da resposta certa é distribuído por bloco (ex2-1, ex2-2…): a cada grupo
+ * de questões vizinhas — tantas quantas as opções —, cada lugar recebe a resposta
+ * uma vez, numa ordem sorteada. Fica equilibrado sem virar um padrão fixo.
+ * Tudo sai da própria questão, então a ordem é sempre a mesma para ela: o painel
+ * pode se redesenhar, ou a sessão ser retomada, sem as opções trocarem de lugar.
+ */
+export function shuffledOpts(q) {
+  const certa = accepted(q).find((a) => q.opts.includes(a));
+  const outras = shuffle(q.opts.filter((o) => o !== certa), seeded(`${q.id}|${q.q}|${q.opts.join('|')}`));
+  if (certa == null) return outras;
+  const n = q.opts.length;
+  const m = String(q.id).match(/^(.*)-(\d+)$/);
+  let lugar;
+  if (m) {
+    const k = Number(m[2]) - 1;
+    const grupo = shuffle([...Array(n).keys()], seeded(`${m[1]}|${Math.floor(k / n)}|${n}`));
+    lugar = grupo[k % n];
+  } else {
+    lugar = Math.floor(seeded(`${q.id}|${q.q}`)() * n);
+  }
+  outras.splice(lugar, 0, certa);
+  return outras;
+}
+
 const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /**
@@ -120,7 +173,7 @@ export function renderQuestion(q, { rule, onAnswer, prev, number, big = false } 
       ...q.opts.map((v) => h('button.opt.art', { type: 'button', 'data-v': v, onclick: () => finish(v) }, v))));
   } else if (q.kind === 'mc') {
     box.append(h('div.q-head', {}, num, h('span.ctx', { html: q.q })),
-      h('div.opts', {}, ...q.opts.map((v) => h('button.opt', { type: 'button', 'data-v': v, onclick: () => finish(v) }, v))));
+      h('div.opts', {}, ...shuffledOpts(q).map((v) => h('button.opt', { type: 'button', 'data-v': v, onclick: () => finish(v) }, v))));
   } else {
     const input = h('input', {
       type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', lang: 'it',
