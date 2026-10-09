@@ -449,8 +449,8 @@ const practice = {
       r('r10', ART('insegnante', 'un', 'Luca é homem → un insegnante.', { ctx: 'Luca è ___ insegnante.', opts: ['un', "un'"] })),
       r('r3', ARTPL('zio', 'gli zii')), r('r3', ARTPL('studente', 'gli studenti')),
       r('r3', ARTPL('psicologo', 'gli psicologi')), r('r4', ARTPL('scuola', 'le scuole')),
-      MC('Quale forma è <b>sbagliata</b>?', ["un'amico", "un'amica", 'un amico'], "un'amico", 'No masculino não se usa apóstrofo: o certo é un amico.'),
-      MC('<b>Un’insegnante</b> indica…', ['un uomo', 'una donna'], 'una donna', 'O apóstrofo marca o feminino: un’insegnante é professora.'),
+      r('r8', MC('Quale forma è <b>sbagliata</b>?', ["un'amico", "un'amica", 'un amico'], "un'amico", 'No masculino não se usa apóstrofo: o certo é un amico.')),
+      r('r10', MC('<b>Un’insegnante</b> indica…', ['un uomo', 'una donna'], 'una donna', 'O apóstrofo marca o feminino: un’insegnante é professora.')),
     ],
   },
 };

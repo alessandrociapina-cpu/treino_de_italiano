@@ -13,7 +13,8 @@ const caps = process.argv.slice(2).filter((a) => /^\d+$/.test(a));
 const suites = [
   ['respostas', 'answers.mjs'],
   ['lições', 'lesson.mjs'],
-  ['layout no celular', 'layout.mjs'],
+  ['caminho do erro', 'errors.mjs'],
+  ['layout da lousa', 'layout.mjs'],
   ['subcaminho', 'subpath.mjs'],
   ...(rapido ? [] : [['rolagem horizontal', 'hscroll.mjs']]),
 ];

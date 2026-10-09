@@ -1,10 +1,11 @@
-// No celular (390px), cada parte tem de manter a lousa com altura constante
-// entre os passos — se ela oscila, a página "pula" enquanto o aluno estuda —
-// e nenhuma tabela pode estourar o invólucro que rola na horizontal.
+// No celular (390px) e no desktop, cada parte tem de manter a lousa com altura
+// constante entre os passos — se ela oscila, a página "pula" enquanto o aluno
+// estuda — sem que o conteúdo vaze da altura reservada. No celular, nenhuma
+// tabela pode estourar o invólucro que rola na horizontal.
 //
 //   node test/layout.mjs          todos os capítulos
 //   node test/layout.mjs 17 18    só esses
-import { serve, browser, newPage, MOBILE, questionMap, listChapters, answerStep, nextStep, chaptersFromArgv, report } from './lib.mjs';
+import { serve, browser, newPage, MOBILE, DESKTOP, questionMap, listChapters, answerStep, nextStep, chaptersFromArgv, report } from './lib.mjs';
 
 // Uma folga de poucos pixels dentro do invólucro é invisível e não vale alarme.
 const TABLE_SLACK = 4;
@@ -12,29 +13,8 @@ const TABLE_SLACK = 4;
 // Problemas já diagnosticados e ainda não corrigidos. Ficam listados em vez de
 // reprovar o conjunto, para que uma falha nova não se confunda com uma velha.
 // Se um deles parar de acontecer, o teste avisa para tirar daqui.
-const MEMO = 'measureBoards chama bookBoard(b, quiet) sem passar as regras (js/app.js), '
-  + 'então o Promemoria fica vazio na medição e a altura reservada sai menor que a real. '
-  + 'Passadas as regras, cada lousa de exercício fica na sua altura natural. O .memo '
-  + 'deveria encolher e rolar (flex:1 + overflow-y:auto), mas isso exige altura definida: '
-  + 'no desktop ela vem da coluna ao lado, no celular a lousa só tem min-height e cresce.';
-
-const TABELA = 'Tabela mais larga que a tela. Não quebra nada — o .table-wrap rola na '
-  + 'horizontal e a página não acompanha (o hscroll passa) —, mas o aluno precisa arrastar '
-  + 'a tabela para ler o fim. Dos capítulos 9 em diante as tabelas foram remodeladas (menos '
-  + 'colunas, cabeçalhos curtos) para caber; nos primeiros não, porque esta checagem ainda '
-  + 'não existia.';
-
-const CONHECIDOS = [
-  { chave: 'cap 1 parte u: lousa oscila', porque: MEMO },
-  { chave: 'cap 5 parte g: lousa oscila', porque: MEMO },
-  { chave: 'cap 7 parte c: lousa oscila', porque: MEMO },
-  { chave: 'cap 5 parte b (Regra 8', porque: TABELA },
-  { chave: 'cap 5 parte d (Regra 13', porque: TABELA },
-  { chave: 'cap 5 parte e (Regra 14', porque: TABELA },
-  { chave: 'cap 5 parte e (Regra 15', porque: TABELA },
-  { chave: 'cap 5 parte e (Regra 16', porque: TABELA },
-  { chave: 'cap 8 parte a (Regra 1', porque: TABELA },
-];
+// Formato: { chave: 'cap 5 parte b (Regra 8', porque: 'explicação' }
+const CONHECIDOS = [];
 
 const { base, close } = await serve();
 const b = await browser();
@@ -49,9 +29,10 @@ for (const cap of caps) {
   const qmap = await questionMap(probe, cap);
   const linha = [];
 
-  for (const part of parts) {
+  for (const [tela, viewport] of [['celular', MOBILE], ['desktop', DESKTOP]]) for (const part of parts) {
+    const onde = tela === 'celular' ? `parte ${part}` : `parte ${part} (desktop)`;
     // Contexto novo por parte: o histórico salvo mudaria o ponto de partida.
-    const p = await newPage(b, MOBILE);
+    const p = await newPage(b, viewport);
     await p.goto(`${base}#/modulo/${cap}/${part}`);
     await p.waitForTimeout(350);
     await p.click('text=Cominciamo!');
@@ -64,20 +45,29 @@ for (const cap of caps) {
         alturas.add(await p.evaluate(() => document.querySelector('.lesson-grid > .board')?.offsetHeight));
         await p.waitForTimeout(200);
       }
-      const over = await p.evaluate(() => {
+      // A altura é fixa: se a medição sair menor que o conteúdo, ele vaza da lousa.
+      const vaza = await p.evaluate(() => {
+        const c = document.querySelector('.lesson-grid > .board .board-content');
+        return c ? c.scrollHeight - c.clientHeight : 0;
+      });
+      if (vaza > 2) {
+        const titulo = await p.$eval('.step-title', (e) => e.textContent.trim());
+        failures.push(`cap ${cap} ${onde} (${titulo}): conteúdo vaza da lousa +${vaza}px`);
+      }
+      const over = tela === 'desktop' ? 0 : await p.evaluate(() => {
         const t = document.querySelector('.chalk-table');
         return t ? t.scrollWidth - t.parentElement.clientWidth : 0;
       });
       if (over > TABLE_SLACK) {
         const titulo = await p.$eval('.step-title', (e) => e.textContent.trim());
-        failures.push(`cap ${cap} parte ${part} (${titulo}): tabela estoura +${over}px`);
+        failures.push(`cap ${cap} ${onde} (${titulo}): tabela estoura +${over}px`);
       }
       await answerStep(p, qmap);
       if (!(await nextStep(p))) break;
     }
 
-    if (alturas.size !== 1) failures.push(`cap ${cap} parte ${part}: lousa oscila entre ${[...alturas].join(', ')}px`);
-    linha.push(`${part}=${[...alturas].join('/')}`);
+    if (alturas.size !== 1) failures.push(`cap ${cap} ${onde}: lousa oscila entre ${[...alturas].join(', ')}px`);
+    linha.push(`${tela === 'desktop' ? `${part}·d` : part}=${[...alturas].join('/')}`);
     await p.context().close();
   }
   console.log(`Cap. ${cap} — alturas da lousa: ${linha.join(' ')}`);
@@ -99,4 +89,4 @@ for (const c of CONHECIDOS) {
   }
 }
 
-report('layout no celular', novos);
+report('layout da lousa', novos);

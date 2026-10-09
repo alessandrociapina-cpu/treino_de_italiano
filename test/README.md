@@ -22,9 +22,10 @@ existir no ambiente mas fora do projeto, aponte `PLAYWRIGHT_MODULE` para o
 
 | Arquivo | O que garante |
 |---|---|
-| `answers.mjs` | Toda resposta declarada como aceita (inclusive cada alternativa de `a: [...]`) passa pelo `check()` do app, e toda múltipla escolha tem a resposta certa entre as opções. Roda dentro do navegador, porque `js/quiz.js` depende de `window`. |
+| `answers.mjs` | Toda resposta declarada como aceita (inclusive cada alternativa de `a: [...]`) passa pelo `check()` do app, e toda múltipla escolha tem a resposta certa entre as opções. Na múltipla escolha, confere também a posição da resposta certa na ordem em que o aluno vê as opções (nenhum lugar pode concentrar mais de 60% num capítulo) e que essa ordem é estável entre um desenho e outro. Roda dentro do navegador, porque `js/quiz.js` depende de `window`. |
 | `lesson.mjs` | Cada parte de cada capítulo é percorrida até o fim respondendo com o gabarito do próprio módulo, e tem de fechar em 100%. Depois joga uma rodada de cada nível de reforço. Qualquer erro de console ou requisição falha reprova. |
-| `layout.mjs` | Num celular de 390px a lousa mantém altura constante entre os passos (se oscila, a página pula enquanto o aluno estuda) e nenhuma tabela estoura o invólucro que rola na horizontal. |
+| `errors.mjs` | O caminho do erro. Em **cada** questão de cada capítulo (regras, livro e reforço) responde errado como o aluno faria e confere a correção: a resposta é recusada e conta uma vez só, a questão trava, a opção errada e a certa ficam marcadas, aparece o que o aluno escreveu (escapado, nunca como HTML), a resposta certa — que o próprio `check()` aceita —, a explicação e a regra a revisar. Confere também a resposta só sem acento (aceita, com aviso) e a correção redesenhada ao retomar a sessão. Depois, pela interface, percorre a primeira parte de cada capítulo errando metade, recarrega no meio, e confere placar, resultado, revisão dos erros, desempenho por regra, histórico e um erro no reforço. |
+| `layout.mjs` | No celular (390px) e no desktop a lousa mantém altura constante entre os passos (se oscila, a página pula enquanto o aluno estuda) e o conteúdo não vaza da altura reservada; no celular, nenhuma tabela estoura o invólucro que rola na horizontal. |
 | `hscroll.mjs` | A 390px a página nunca rola na horizontal, em nenhum passo de nenhuma parte de nenhum capítulo. É o mais lento, e já pegou uma regressão que nenhum outro pegou. |
 | `subpath.mjs` | O app funciona servido num subcaminho, que é como o GitHub Pages o entrega (`/treino_de_italiano/`): intro, home, lição, escopo do service worker e `start_url`/ícones do manifest. |
 
@@ -38,41 +39,21 @@ ficam registrados em vez de reprovar o conjunto, para que uma falha nova não se
 confunda com uma velha. Se um deles parar de acontecer, o teste avisa para tirar
 da lista.
 
-Os nove de hoje apareceram na primeira vez que o conjunto rodou nos 18
-capítulos, e **todos são dos capítulos 1 a 8** — construídos antes destas
-checagens existirem. São os primeiros candidatos a uma revisão.
+Hoje a lista está **vazia**. Os nove problemas que ela registrava (todos dos
+capítulos 1 a 8) foram corrigidos:
 
-### A lousa salta entre as regras e os exercícios (caps. 1, 5g, 7c)
+- **A lousa saltava entre as regras e os exercícios** (caps. 1, 5g, 7c — e, sem
+  que o teste visse, também no desktop). O *Promemoria* agora entra na medição
+  de `measureBoards` com altura limitada (`.board-measure .memo-list`), e a lousa
+  usa `height: var(--board-h)` em vez de `min-height`. Com altura definida, o
+  resumo ocupa o espaço que sobra e rola, sem esticar a lousa.
+- **Seis tabelas mais largas que a tela** (caps. 5b, 5d, 5e ×3, 8a). Foram
+  remodeladas como as dos capítulos 9 em diante: sem o cabeçalho "Persona",
+  tabela por infinitivo com só as pessoas que a regra trata, ou menos colunas.
 
-No celular, ao passar das regras para os exercícios do livro, a lousa muda de
-altura: 914 → 1589px no Capítulo 1, 1953 → 1899px em 5g, 914 → 968px em 7c.
-
-A causa está em `measureBoards` (`js/app.js`), que chama `bookBoard(b, quiet)`
-sem o terceiro argumento. O *Promemoria* — a lista com o resumo das regras —
-fica vazio na medição, então a altura reservada sai menor que a real. No
-Capítulo 1, que tem 18 regras numa parte só, a diferença chega a 675px.
-
-O `.memo` foi feito para encolher e rolar (`flex: 1` + `overflow-y: auto`), mas
-isso só funciona quando a lousa tem altura **definida**. No desktop ela ganha
-altura da coluna ao lado e o resumo rola; no celular, empilhada, a lousa só tem
-`min-height` e o resumo a estica. Por isso não aparece no desktop.
-
-Dois caminhos, nenhum testado: passar `part.rules` na medição — mas aí todas as
-lousas de regra do Capítulo 1 ficariam com 1589px numa tela de 844px, o que é
-pior —, ou dar altura definida à lousa no celular
-(`@media (max-width: 900px) { .lesson-grid > .board { height: var(--board-h) } }`)
-para que o resumo volte a rolar. A segunda mexe no layout mobile dos 18
-capítulos e pede rodar `layout.mjs` e `hscroll.mjs` inteiros depois.
-
-### Tabelas mais largas que a tela (caps. 5b, 5d, 5e ×3, 8a)
-
-Estouram o invólucro de 9 a 66px. Não quebram nada: o `.table-wrap` rola na
-horizontal e a página não acompanha (o `hscroll.mjs` passa). Mas o aluno precisa
-arrastar a tabela para ler o fim.
-
-Dos capítulos 9 em diante as tabelas foram remodeladas para caber — menos
-colunas, cabeçalhos curtos. Nos primeiros não, porque esta checagem ainda não
-existia. O conserto é por tabela, no arquivo de dados do capítulo.
+Como a altura da lousa agora é fixa, o `layout.mjs` também confere que o
+conteúdo não vaza dela — se a medição sair menor que o conteúdo real, o teste
+reprova.
 
 ## O que estes testes **não** pegam
 
@@ -84,10 +65,10 @@ Vale saber antes de confiar neles:
   trabalho de revisão humana — os gabaritos usados estão citados na mensagem de
   commit de cada módulo.
 - **Qualidade pedagógica.** Se uma explicação (`why`) está confusa, se uma dica
-  está errada ou se um exercício é ambíguo, nenhum teste reclama.
+  está errada ou se um exercício é ambíguo, nenhum teste reclama. O `errors.mjs`
+  garante que toda correção *tem* resposta, porquê e regra — não que estejam
+  certos.
 - **Acessibilidade.** Navegação por teclado, leitor de tela, contraste e foco
   não são verificados.
 - **Aparência.** Não há comparação de imagens; o `layout.mjs` só mede altura da
-  lousa e estouro de tabela.
-- **O caminho do erro.** Os testes acertam tudo de propósito. A correção
-  instantânea — o que o aluno vê quando erra — não é exercitada em lugar nenhum.
+  lousa, vazamento do conteúdo e estouro de tabela.
