@@ -10,10 +10,14 @@ const aqui = (f) => fileURLToPath(new URL(f, import.meta.url));
 const rapido = process.argv.includes('--rapido');
 const caps = process.argv.slice(2).filter((a) => /^\d+$/.test(a));
 
+// Estes escolhem os próprios casos e não recebem capítulos.
+const SEM_CAPITULOS = ['subpath.mjs', 'autoscroll.mjs'];
+
 const suites = [
   ['respostas', 'answers.mjs'],
   ['lições', 'lesson.mjs'],
   ['layout no celular', 'layout.mjs'],
+  ['rolagem automática', 'autoscroll.mjs'],
   ['subcaminho', 'subpath.mjs'],
   ...(rapido ? [] : [['rolagem horizontal', 'hscroll.mjs']]),
 ];
@@ -22,8 +26,7 @@ const falhou = [];
 for (const [nome, arquivo] of suites) {
   console.log(`\n${'='.repeat(60)}\n${nome}\n${'='.repeat(60)}`);
   const t = Date.now();
-  // subpath.mjs não recebe capítulos: ele testa o app inteiro de uma vez.
-  const args = arquivo === 'subpath.mjs' ? [] : caps;
+  const args = SEM_CAPITULOS.includes(arquivo) ? [] : caps;
   const code = await new Promise((ok) => {
     spawn(process.execPath, [aqui(arquivo), ...args], { stdio: 'inherit' }).on('close', ok);
   });

@@ -341,9 +341,9 @@ function viewLesson(id, partId) {
       if (anim.cancelled) return;
       panel.classList.remove('locked');
       panel.classList.add('unlocked');
-      if (!already && window.matchMedia('(max-width: 900px)').matches) {
-        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      // Aqui o painel só destrava: a página não rola sozinha. No celular ele
+      // fica abaixo da lousa, e pular para ele ao fim da animação tirava a
+      // linha de quem ainda estava lendo a regra. Quem terminou desce sozinho.
       if (!already) setTimeout(() => focusNext(list, true), 400);
     });
   }

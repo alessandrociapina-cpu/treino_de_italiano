@@ -25,6 +25,7 @@ existir no ambiente mas fora do projeto, aponte `PLAYWRIGHT_MODULE` para o
 | `answers.mjs` | Toda resposta declarada como aceita (inclusive cada alternativa de `a: [...]`) passa pelo `check()` do app, e toda múltipla escolha tem a resposta certa entre as opções. Roda dentro do navegador, porque `js/quiz.js` depende de `window`. |
 | `lesson.mjs` | Cada parte de cada capítulo é percorrida até o fim respondendo com o gabarito do próprio módulo, e tem de fechar em 100%. Depois joga uma rodada de cada nível de reforço. Qualquer erro de console ou requisição falha reprova. |
 | `layout.mjs` | Num celular de 390px a lousa mantém altura constante entre os passos (se oscila, a página pula enquanto o aluno estuda) e nenhuma tabela estoura o invólucro que rola na horizontal. |
+| `autoscroll.mjs` | A página não rola sozinha quando a lousa termina de escrever. No celular o painel fica abaixo da lousa, e pular para ele tirava a linha de quem ainda estava lendo a regra. |
 | `hscroll.mjs` | A 390px a página nunca rola na horizontal, em nenhum passo de nenhuma parte de nenhum capítulo. É o mais lento, e já pegou uma regressão que nenhum outro pegou. |
 | `subpath.mjs` | O app funciona servido num subcaminho, que é como o GitHub Pages o entrega (`/treino_de_italiano/`): intro, home, lição, escopo do service worker e `start_url`/ícones do manifest. |
 
