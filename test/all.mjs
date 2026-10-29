@@ -16,7 +16,8 @@ const SEM_CAPITULOS = ['subpath.mjs', 'autoscroll.mjs'];
 const suites = [
   ['respostas', 'answers.mjs'],
   ['lições', 'lesson.mjs'],
-  ['layout no celular', 'layout.mjs'],
+  ['caminho do erro', 'errors.mjs'],
+  ['layout da lousa', 'layout.mjs'],
   ['rolagem automática', 'autoscroll.mjs'],
   ['subcaminho', 'subpath.mjs'],
   ...(rapido ? [] : [['rolagem horizontal', 'hscroll.mjs']]),

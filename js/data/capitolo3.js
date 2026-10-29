@@ -522,9 +522,9 @@ const practice = {
       r('r11', AGG('Questo caffè è ___ amaro.', 'troppo', 'troppo', 'Acompanha o adjetivo amaro → advérbio.')),
       r('r11', AGG('Ho ___ amiche.', 'poco', 'poche', 'amiche é feminino plural → poche.')),
       r('r11', AGG('Dormo ___.', 'poco', 'poco', 'Acompanha o verbo dormo → advérbio.')),
-      MC('<b>Quegli</b> si usa con…', ['gli studenti', 'i libri', 'le case'], 'gli studenti', 'quegli acompanha as palavras que pedem gli.'),
-      MC('Qual è la forma giusta?', ['un bello film', 'un bel film'], 'un bel film', 'il film → un bel film.'),
-      MC('Qual è la forma giusta?', ['un buon studente', 'un buono studente'], 'un buono studente', 'uno studente → un buono studente.'),
+      r('r9', MC('<b>Quegli</b> si usa con…', ['gli studenti', 'i libri', 'le case'], 'gli studenti', 'quegli acompanha as palavras que pedem gli.')),
+      r('r9', MC('Qual è la forma giusta?', ['un bello film', 'un bel film'], 'un bel film', 'il film → un bel film.')),
+      r('r10', MC('Qual è la forma giusta?', ['un buon studente', 'un buono studente'], 'un buono studente', 'uno studente → un buono studente.')),
     ],
   },
 };

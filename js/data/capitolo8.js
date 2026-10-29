@@ -12,9 +12,9 @@ const rules = [
     pt: 'No verbo reflexivo, quem faz e quem recebe a ação são <b>a mesma pessoa</b>: <i>lavar-se</i>, <i>levantar-se</i>. No infinitivo, o italiano gruda o <b>-si</b> no fim: <i>lavarsi</i>, <i>alzarsi</i>.',
     short: 'Verbo reflexivo: sujeito e objeto são a mesma pessoa. No infinitivo termina em -si (lavarsi).',
     table: {
-      mark: 'none', wide: true,
-      cols: ['Verbo', 'Significato', 'Verbo', 'Significato'],
-      rows: [['alzarsi', 'levantar-se', 'svegliarsi', 'acordar'], ['lavarsi', 'lavar-se', 'vestirsi', 'vestir-se'], ['chiamarsi', 'chamar-se', 'sentirsi', 'sentir-se'], ['divertirsi', 'divertir-se', 'riposarsi', 'descansar'], ['arrabbiarsi', 'ficar bravo', 'annoiarsi', 'entediar-se'], ['ricordarsi', 'lembrar-se', 'dimenticarsi', 'esquecer-se']],
+      mark: 'none',
+      cols: ['Verbo', 'Significato'],
+      rows: [['alzarsi', 'levantar-se'], ['svegliarsi', 'acordar'], ['lavarsi', 'lavar-se'], ['vestirsi', 'vestir-se'], ['chiamarsi', 'chamar-se'], ['sentirsi', 'sentir-se'], ['divertirsi', 'divertir-se'], ['riposarsi', 'descansar'], ['arrabbiarsi', 'ficar bravo'], ['annoiarsi', 'entediar-se'], ['ricordarsi', 'lembrar-se'], ['dimenticarsi', 'esquecer-se']],
     },
     tip: 'A categoria existe igual em português — e boa parte dos verbos coincide. Repare que alguns que são reflexivos em italiano não são em português: <i>svegliar<b>si</b></i> é só "acordar", <i>arrabbiar<b>si</b></i> é "ficar bravo", <i>annoiar<b>si</b></i> é "entediar-se". Vale aprender o verbo já com o <b>-si</b> colado.',
     task: 'Esse verbo é reflexivo?',

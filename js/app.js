@@ -286,6 +286,9 @@ function viewLesson(id, partId) {
       nav.querySelectorAll('button').forEach((b) => { b.disabled = true; });
       currentAnim?.skip();
       await eraseBoard(body);
+      // Se o aluno saiu da lição durante o apagador, esta tela já não existe:
+      // gravar a tentativa ou navegar daqui arrancaria ele de onde foi.
+      if (!body.isConnected) return;
       if (target === 'end') finishLesson(); else show(target);
     };
     const prevBtn = i > 0 ? h('button.btn.btn-ghost', { type: 'button', onclick: () => goTo(i - 1) }, '← Anterior') : h('span');
@@ -312,8 +315,6 @@ function viewLesson(id, partId) {
     const already = qs.every((q) => state.answers[q.id]);
     if (already) anim.skip();
 
-    // Numa parte de revisão (sem regras próprias), o resumo traz as regras do capítulo inteiro.
-    const memoRules = part.rules.length ? part.rules : mod.rules;
     const board = step.type === 'rule' ? ruleBoard(step.rule, anim) : bookBoard(step.ex, anim, memoRules);
     const list = h('div.q-list', {},
       ...qs.map((q, n) => renderQuestion(q, {
@@ -348,6 +349,9 @@ function viewLesson(id, partId) {
     });
   }
 
+  // Numa parte de revisão (sem regras próprias), o resumo traz as regras do capítulo inteiro.
+  const memoRules = part.rules.length ? part.rules : mod.rules;
+
   // Mantém todas as lousas do módulo com a altura da maior (recalcula ao mudar a largura).
   let measuredWidth = 0;
   function fitBoard(force) {
@@ -356,7 +360,7 @@ function viewLesson(id, partId) {
     const w = Math.round(board.getBoundingClientRect().width);
     if (w && (w !== measuredWidth || force)) {
       measuredWidth = w;
-      body.style.setProperty('--board-h', `${measureBoards(part, w)}px`);
+      body.style.setProperty('--board-h', `${measureBoards(part, w, memoRules)}px`);
     }
     // Lousa mais alta que a tela não pode ficar "grudada" no topo: rola junto com a página.
     body.classList.toggle('tall-board', board.offsetHeight > innerHeight - 170);
@@ -548,13 +552,14 @@ function bookBoard(ex, anim, rules = []) {
  * Altura fixa da lousa: mede a lousa de todas as regras e exercícios da parte
  * (já com o conteúdo completo) na largura atual e usa a maior.
  */
-function measureBoards(part, width) {
+function measureBoards(part, width, memoRules) {
   const probe = h('div.board-measure', { style: { width: `${width}px` } });
   document.body.append(probe);
   const quiet = animator();
   quiet.cancel();
-  // O resumo das regras não entra na medida: ele se ajusta ao espaço que sobrar.
-  const boards = [...part.rules.map((r) => ruleBoard(r, quiet)), ...part.book.map((b) => bookBoard(b, quiet))];
+  // O resumo das regras entra na medida com altura limitada (.board-measure .memo-list):
+  // na lousa de verdade ele ocupa o espaço que sobrar e rola, sem esticar a lousa.
+  const boards = [...part.rules.map((r) => ruleBoard(r, quiet)), ...part.book.map((b) => bookBoard(b, quiet, memoRules))];
   boards.forEach((b) => probe.append(b.node));
   const max = Math.max(...boards.map((b) => b.node.offsetHeight));
   probe.remove();
@@ -703,7 +708,7 @@ function viewResult(attemptId) {
     });
     breakdown = h('section.card', {},
       h('h3', {}, 'Desempenho por regra'),
-      h('div.rule-chips', {}, ...(part?.rules || mod.rules).map((r) => {
+      h('div.rule-chips', {}, ...ruleChipsFor(part?.rules?.length ? part.rules : mod.rules, wrongRules, mod).map((r) => {
         const n = wrongRules.get(r.id) || 0;
         return h(`span.rule-chip${n === 0 ? '.good' : n === 1 ? '.mid' : '.bad'}`, { title: r.title },
           h('b', {}, r.num), ` ${r.title}`, n ? h('small', {}, ` · ${n} erro${n > 1 ? 's' : ''}`) : ' ✓');
@@ -743,6 +748,15 @@ function viewResult(attemptId) {
     ));
 
   if (isLatest && p >= 70) wait(500).then(confetti);
+}
+
+/**
+ * Regras do quadro de desempenho: as da parte e, depois, as de outras partes
+ * que um exercício do livro cobrou e o aluno errou — senão esses erros somem.
+ */
+function ruleChipsFor(rules, wrongRules, mod) {
+  const extra = mod.rules.filter((r) => wrongRules.has(r.id) && !rules.includes(r));
+  return [...rules, ...extra];
 }
 
 function mistakeItem({ q, rule, given }) {

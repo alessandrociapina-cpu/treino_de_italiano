@@ -352,11 +352,15 @@ button { font: inherit; color: inherit; }
 .speak { background: none; border: 0; cursor: pointer; font-size: 1rem; padding: 2px 4px; border-radius: 8px; opacity: .75; flex: none; }
 .speak:hover { opacity: 1; background: rgba(127, 127, 127, .15); }
 
-/* Altura fixa: todas as lousas do módulo usam a altura da maior (calculada em app.js). */
-.lesson-grid > .board { min-height: var(--board-h, 340px); }
+/* Altura fixa: todas as lousas do módulo usam a altura da maior (calculada em app.js).
+   Tem de ser height, e não min-height: só com altura definida o Promemoria encolhe e
+   rola em vez de esticar a lousa — no celular e no desktop. */
+.lesson-grid > .board { height: var(--board-h, auto); }
 .tall-board .board { position: relative; top: 0; }
 .board-measure { position: absolute; left: -10000px; top: 0; visibility: hidden; pointer-events: none; }
 .board-measure .board { position: relative; top: 0; }
+/* Na medição o resumo ganha um teto: é o mínimo que ele terá na lousa antes de rolar. */
+.board-measure .memo-list { max-height: 15rem; }
 
 /* Apagador: limpa a lousa de cima para baixo antes da próxima regra */
 .board.erasing .board-content { animation: wipe 1.05s linear forwards; }
